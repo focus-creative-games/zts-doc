@@ -31,11 +31,12 @@ description: ZTS 是什么、核心特性与适用场景。
 
 | 能力 | 说明 |
 |------|------|
-| JS/TS → C# | `CSharp` 懒绑定或 `import { T } from "csharp:…"` |
-| C# → JS | `TsAppDomain.GetFunction<T>` 取得 Delegate 后调用 |
+| JS/TS → C# | `CSharp` 懒绑定或 `import { T } from "csharp:…"`；实例 `obj.Method(args)` |
+| C# → JS | `TsAppDomain.GetFunction<T>(module, export)`（specifier **无** `.js`/`.ts`） |
 | 双运行时 | **Mono（Editor）与 Il2Cpp（Player）**；语义一致、实现路径不同 |
 | TypeScript | 官方工作流；见 [TypeScript 工作流](/docs/guides/typescript-workflow/) |
 | Marshal | ByVal / ByObj / Opaque 等，见 [Marshal 规范](/docs/spec/marshal/) |
+| miss | 未注册成员 **`throw Error('zts: member not found')`**，不返回 `undefined` |
 
 :::info 当前状态
 <span class="runtimeBadge"><span class="runtimeBadgeMono">Mono · 已完成</span><span class="runtimeBadgeIl2cpp">Il2Cpp · 已完成</span></span>
@@ -43,9 +44,28 @@ description: ZTS 是什么、核心特性与适用场景。
 日常在 **Editor（Mono）** 开发；发版与性能以 **Il2Cpp Player** 为准。详见 [项目状态](/docs/getting-started/project-status/)。
 :::
 
+## 诚实边界
+
+| 情况 | 建议 |
+|------|------|
+| 不愿维护 libil2cpp 集成 | 评估 Puerts / 更轻量自管方案 |
+| 已有大量 Puerts 资产 | 先读 [迁移](/docs/community/migration/) |
+| 只需极少手写绑定 | 自管 QuickJS 可能更直接 |
+| 团队只写 Lua | 优先 [ZLua](https://doc.zlua.cn) |
+
+公开性能数字：方法论对齐 ZLua；**ZTS 公开基准待补齐**（见 [特性对比](/docs/compare/FEATURES/)）。
+
+## 相关产品
+
+| 产品 | 说明 |
+|------|------|
+| **本站（ZTS）** | Unity / 团结引擎上的 TypeScript·JavaScript（QuickJS）方案 |
+| **[ZLua](https://doc.zlua.cn)** | 同构语义的 Lua 产品线 |
+| **[zts-ue](https://github.com/focus-creative-games/zts-ue)** | Unreal Engine 上的现代 TypeScript 方案（面向 C++ 优化）；**目前仍在开发中**，本站文档不覆盖 UE 用法 |
+
 ## 下一步
 
-- [5 分钟快速开始](/docs/getting-started/quick-start/) — 跑通 js-demo / ts-demo
-- [安装与集成](/docs/getting-started/installation/)
-- [使用指南](/docs/guides/install/)
-- [规范总览](/docs/spec/00-OVERVIEW/)
+1. [5 分钟快速开始](/docs/getting-started/quick-start/) — 跑通 js-demo / ts-demo
+2. [安装与集成](/docs/getting-started/installation/) · [使用指南](/docs/guides/install/)
+3. [设计概览](/docs/concepts/design-overview/) · [双运行时](/docs/concepts/dual-runtime/)
+4. [规范总览](/docs/spec/00-OVERVIEW/) — 需要完备语义时再深入

@@ -15,7 +15,7 @@ description: 用 zts-demo 的 js-demo / ts-demo 跑通最小闭环。
 | `js-demo/` | 纯 JavaScript（ESM），脚本在 `JsScripts/` |
 | `ts-demo/` | TypeScript 工作流（`TsProject/`） |
 
-Environment: Unity **2022.3 LTS** recommended (also **2021.3.x** / **6000.0.x** / **6000.3.x** / **6000.5.x** / **Tuanjie Engine 1.x.y** — see [Compatibility](/docs/getting-started/compatibility/)); `ts-demo` needs **Node LTS**.
+环境：推荐 Unity **2022.3 LTS**（亦支持 **2021.3.x** / **6000.0.x** / **6000.3.x** / **6000.5.x** / **团结引擎 1.x.y**，见 [兼容性](/docs/getting-started/compatibility/)）；`ts-demo` 需要本机 **Node LTS**。
 
 ## 路径 A：js-demo（Editor）
 

@@ -147,6 +147,10 @@ const config: Config = {
               label: 'ZLua docs',
               href: 'https://doc.zlua.cn',
             },
+            {
+              label: 'zts-ue (Unreal, WIP)',
+              href: 'https://github.com/focus-creative-games/zts-ue',
+            },
           ],
         },
       ],

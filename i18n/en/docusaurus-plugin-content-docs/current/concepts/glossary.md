@@ -8,12 +8,6 @@ description: ZTS / ZLua 对齐术语（从 ZTSTest Docs/GLOSSARY 同步）。
 术语表上游为 `ZTSTest/Docs/GLOSSARY.md`；修改后执行 `npm run sync-spec`。
 :::
 
-
-﻿---
-sidebar_position: 0
-title: "术语表"
----
-
 # 术语表（GLOSSARY）
 
 > 规范性术语以本表为准；实现细节见「实现落点」列。
