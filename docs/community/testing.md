@@ -33,7 +33,7 @@ description: 社区如何验证与最小复现；Editor / Player 矩阵（实用
 | 脚本路径 | `JsScripts` / `TsProject/out` | `StreamingAssets/Js` 或 `StreamingAssets/ZTS` |
 | 断言标准 | 同一套期望行为 | **同一套**；不要「Editor 过就算」 |
 
-**平台原则（实用版）：** 关键互操作路径至少覆盖 **Editor 一次 + 目标平台 Il2Cpp Player 一次**。任一端失败都视为失败，不要用「仅 Mono」当发版依据。
+**平台原则（实用版）：** 关键互操作路径至少覆盖 **Editor 一次 + 目标平台 Il2Cpp Player 一次**（目标可为 Win64 / Android / iOS / WebGL / 小游戏 / 鸿蒙等任一 Il2Cpp 平台，见 [兼容性](/docs/getting-started/compatibility/)）。任一端失败都视为失败，不要用「仅 Mono」当发版依据。
 
 更细的双端差异：[Editor 与 Player](/docs/guides/editor-vs-player/)、[构建](/docs/guides/build/)。
 

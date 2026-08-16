@@ -44,7 +44,7 @@ description: 何时选 ZTS。
 |------|------|
 | **阶段** | **Alpha**（见 [项目状态](/docs/getting-started/project-status/)） |
 | **Editor Mono** | 日常开发与冒烟；Expression Emit |
-| **Il2Cpp Player** | 发布路径（平台以兼容性 / 项目状态为准）；须 Install + **Generate** |
+| **Il2Cpp Player** | 发布路径；覆盖 Il2Cpp 支持的平台（Win64 / Android / iOS / WebGL / 小游戏 / 鸿蒙 / 车机等，见 [兼容性](/docs/getting-started/compatibility/)）；须 Install + **Generate** |
 | **性能数字** | **暂无**公开可复现四方表 → 本目录 **不写假 ns / 假倍数** |
 | **文档 / 生态** | 建设中；无 Puerts 级社区体量 |
 

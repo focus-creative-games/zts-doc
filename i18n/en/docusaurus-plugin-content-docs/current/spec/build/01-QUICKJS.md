@@ -144,11 +144,11 @@ Editor 上 JS→C# 回调 **不得** 在托管 reverse-P/Invoke 帧内直接 **`
 
 ## 5. Il2Cpp 平台面
 
-QuickJS 源码进树后，凡 Unity Il2Cpp 常规支持的目标（**Android / iOS / WebGL / 桌面** 等）均可按 Unity 流程构建；**无**「仅移动平台 + 外置静态库」的特例（区别于 ZLua LuaJIT 模型）。
+QuickJS 源码进树后，凡 Unity / 团结 **Il2Cpp 常规支持的目标**均可按 Unity 流程构建，包括但不限于 **Win64 / Android / iOS / WebGL / 微信小游戏 / 鸿蒙 / 车机** 等桌面、移动、小游戏与车载目标；**无**「仅移动平台 + 外置静态库」的特例（区别于 ZLua LuaJIT 模型）。平台矩阵见 [兼容性](/docs/getting-started/compatibility/)。
 
 | 注意 | 说明 |
 |------|------|
-| **WebGL** | 允许；须确认 QuickJS 编译选项与 Il2Cpp WASM 工具链兼容（见 `impl/IL2CPP.md`） |
+| **WebGL / 小游戏** | 允许；须确认 QuickJS 编译选项与 Il2Cpp WASM / 小游戏工具链兼容（见 `impl/IL2CPP.md`） |
 | **线程** | ZTS v1 为 **单主 `JSContext`**（[10-LIFETIME.md](../10-LIFETIME.md) §6）；QuickJS Worker API **不在** v1 规范范围 |
 | **bigint** | 引擎支持 bigint，但 ZTS v1 **禁止** bigint 作为 CLR 整数通道（[00-OVERVIEW.md](../00-OVERVIEW.md) §1.3） |
 

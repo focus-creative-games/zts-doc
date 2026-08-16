@@ -24,7 +24,7 @@ description: 常见问题。
 
 ### 当前适合上生产吗？
 
-处于 **Alpha**：Editor Mono 与 Win64 等 Il2Cpp Player 主路径已过内部矩阵，但 API/规范可能迭代。接受 Install、Generate、libil2cpp 维护成本后再上业务。见 [项目状态](/docs/getting-started/project-status/)、[兼容性](/docs/getting-started/compatibility/)。
+处于 **Alpha**：Editor Mono 与 Il2Cpp Player（Win64 / Android / iOS 等）主路径已过内部矩阵；Player 设计覆盖 **Il2Cpp 支持的全部平台**（含 WebGL、小游戏、鸿蒙 / 车机等）。API/规范可能迭代，接受 Install、Generate、libil2cpp 维护成本后再上业务。见 [项目状态](/docs/getting-started/project-status/)、[兼容性](/docs/getting-started/compatibility/)。
 
 ### Demo 打不开 / 包路径报错？
 

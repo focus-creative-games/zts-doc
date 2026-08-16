@@ -15,7 +15,7 @@ Editor（Mono）Play 不需要 per-type C# Wrap；发布 **Il2Cpp Player** 前�
 | 1 | 已 [Install](/docs/guides/install/)（本地 `libil2cpp` / QuickJS / `zts-runtime` 存在） |
 | 2 | 菜单 **`ZTS/Generate/All`**（生成 C++ stub，**不是** C# Wrap） |
 | 3 | 纯 JS：将 `JsScripts` 同步到 StreamingAssets；TS：emit 后拷贝 `out/**` → `StreamingAssets/ZTS/` |
-| 4 | Build Settings → **Il2Cpp** → 目标平台 |
+| 4 | Build Settings → **Il2Cpp** → 目标平台（凡 Il2Cpp 支持的平台均可，见 [兼容性](/docs/getting-started/compatibility/)） |
 | 5 | 导出工程后可用 **Debug\|x64**（开发）或 Release 构建原生产物 |
 | 6 | 真机 / 包体冒烟：Initialize、互调、勿用废弃 Event API |
 

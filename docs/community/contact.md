@@ -29,7 +29,7 @@ description: QQ、Discord、Issue 与仓库。
 ```text
 【环境】
 - Unity / 团结版本：
-- 平台：Editor / Win64 Player / 其它：
+- 平台：Editor（Win / macOS） / Player（Win64 / Android / iOS / WebGL / 小游戏 / 鸿蒙…）：
 - ZTS 版本或 commit：
 - 纯 JS 还是 TsProject：
 

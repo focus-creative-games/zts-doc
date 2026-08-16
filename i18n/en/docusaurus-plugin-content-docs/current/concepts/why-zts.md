@@ -134,7 +134,7 @@ Il2Cpp 上的性能目标与 ZLua 相同：**去掉托管 Wrap 折返**，在 C+
 
 ---
 
-## 6. 支持的 Unity 与 QuickJS
+## 6. 支持的 Unity、平台与 QuickJS
 
 | 维度 | ZTS |
 |------|------|
@@ -142,6 +142,8 @@ Il2Cpp 上的性能目标与 ZLua 相同：**去掉托管 Wrap 折返**，在 C+
 | Unity | **2021.3**、**2022.3**、**Unity 6（6000.0 / 6000.3 / 6000.5）** |
 | 引擎 | **团结引擎** |
 | 运行时 | Editor **Mono** + Player **Il2Cpp** |
+| Editor | **Windows**、**macOS** |
+| Player | **Il2Cpp 支持的全部平台**（Win64 / Android / iOS / WebGL / 小游戏 / 鸿蒙 / 车机等） |
 
 完整矩阵见 [兼容性](/docs/getting-started/compatibility/)。
 

@@ -10,7 +10,7 @@ description: Mono Editor 与 Il2Cpp Player 双运行时的差异（附录）。
 
 | | Editor (Mono) | Player (Il2Cpp) |
 |---|---------------|-----------------|
-| **状态** | 日常开发与冒烟 | 发布路径（Win64 等见 [项目状态](/docs/getting-started/project-status/)） |
+| **状态** | 日常开发与冒烟（Windows / macOS） | 发布路径（Il2Cpp 全平台，见 [兼容性](/docs/getting-started/compatibility/)） |
 | 实现 | Expression Emit + exotic 绑定 | C++ `zts-runtime` + native 桥 |
 | 引擎 | `Plugins/quickjs` 动态库（`DllImport("quickjs")`） | QuickJS 源码静态编入 Il2Cpp（`ZTS~/quickjs-il2cpp`） |
 | C#→JS | `TsAppDomain.GetFunction<T>` + Delegate 桥 | 同左 |

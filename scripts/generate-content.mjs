@@ -212,20 +212,38 @@ w(
   `---
 sidebar_position: 3
 title: 兼容性
-description: Unity 版本、运行时与平台验证范围。
+description: Unity 版本、运行时与平台支持范围。
 ---
 
 # 兼容性
 
+## Unity / 团结
+
+| 版本 | 状态 |
+|------|------|
+| Unity **2021.3.x** | ✅ 支持 |
+| Unity **2022.3.x** | ✅ 支持 |
+| Unity **6000.0.x** | ✅ 支持 |
+| Unity **6000.3.x** | ✅ 支持 |
+| Unity **6000.5.x** | ✅ 支持 |
+| **团结引擎 1.x.y** | ✅ 支持 |
+
+## 脚本 VM 与运行时
+
 | 类别 | 状态 |
 |------|------|
-| **引擎** | Unity **2021.3.x** / **2022.3.x** / **6000.0.x** / **6000.3.x** / **6000.5.x**；**团结引擎 1.x.y** |
-| **脚本 VM** | QuickJS（pin 见包内 \`ZTS~/\`） |
-| **运行时** | Editor **Mono** + Player **Il2Cpp** |
-| **平台（开发）** | Windows x64 Editor |
-| **平台（Player）** | 以 Win64 Il2Cpp 为主验证；其它 Il2Cpp 目标陆续跟进 |
+| **脚本 VM** | **QuickJS**（pin 见包内 \`ZTS~/\`） |
+| **Editor** | **Mono** |
+| **Player** | **Il2Cpp**（权威实现） |
 
-语义契约以 [规范文档](/docs/category/spec/) 为准，与实现细节分离。
+## 目标平台
+
+| 类别 | 范围 |
+|------|------|
+| **Editor（开发）** | **Windows x64**、**macOS** |
+| **Player（Il2Cpp）** | Il2Cpp 支持的全部目标（含 **Win64**、**Android**、**iOS**、**WebGL**、**微信小游戏**、**鸿蒙 / 车机** 等） |
+
+语义契约以 [规范文档](/docs/category/spec/) 为准；见 [项目状态](/docs/getting-started/project-status/)。
 `,
 );
 
@@ -239,12 +257,12 @@ description: Alpha 阶段能力边界与双运行时完成度。
 
 # 项目状态
 
-ZTS 目前为 **Alpha**：API 与规范可能随版本迭代，但核心互操作路径（双向调用、Marshal 主路径、TS 工作流）已在 Editor Mono 与 Win64 Il2Cpp Player 上通过内部矩阵验证。
+ZTS 目前为 **Alpha**：API 与规范可能随版本迭代，但核心互操作路径已在 Editor Mono 与 Il2Cpp Player（含 Win64 / Android / iOS 等）上通过内部矩阵验证。Player 覆盖 **Il2Cpp 支持的全部平台**（见 [兼容性](/docs/getting-started/compatibility/)）。
 
 | 维度 | 说明 |
 |------|------|
-| Editor Mono | 日常开发与冒烟；Expression Emit |
-| Il2Cpp Player | 发布路径；\`zts-runtime\` C++ 桥 |
+| Editor Mono | 日常开发与冒烟（Windows / macOS）；Expression Emit |
+| Il2Cpp Player | 发布路径；\`zts-runtime\` C++ 桥；凡 Il2Cpp 可构建目标均可发布 |
 | 文档 | 本站 + 上游 \`Docs/spec\` |
 | Demo | [zts-demo](https://github.com/focus-creative-games/zts-demo) \`js-demo\` / \`ts-demo\` |
 
