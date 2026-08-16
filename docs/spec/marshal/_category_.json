@@ -1,0 +1,10 @@
+{
+  "label": "Marshal",
+  "position": 30,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "description": "参数与类型 Marshal 规范（C# ↔ JavaScript）。"
+  }
+}

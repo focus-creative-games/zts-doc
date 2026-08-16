@@ -1,0 +1,66 @@
+{
+  "homepage.title": {
+    "message": "ZTS 文档",
+    "description": "Homepage hero title"
+  },
+  "homepage.tagline": {
+    "message": "零配置 · 完备 C# 互操作 · QuickJS 上的 TypeScript / JavaScript",
+    "description": "Homepage tagline"
+  },
+  "homepage.cta.quickStart": {
+    "message": "5 分钟快速开始",
+    "description": "Homepage primary CTA"
+  },
+  "homepage.cta.demo": {
+    "message": "查看 Demo",
+    "description": "Homepage demo CTA"
+  },
+  "homepage.heroMeta": {
+    "message": "Unity 2022.3 LTS · QuickJS · Editor Mono + Il2Cpp Player · 与 ZLua 同构",
+    "description": "Homepage hero meta line"
+  },
+  "homepage.codePreview.title": {
+    "message": "双向调用一览",
+    "description": "Homepage code preview heading"
+  },
+  "homepage.tab.cs2js": {
+    "message": "C# → JS",
+    "description": "Homepage code tab"
+  },
+  "homepage.tab.js2cs": {
+    "message": "JS/TS → C#",
+    "description": "Homepage code tab"
+  },
+  "homepage.layoutTitle": {
+    "message": "首页",
+    "description": "Homepage document title"
+  },
+  "homepage.layoutDesc": {
+    "message": "ZTS：Unity 上基于 QuickJS 的 TypeScript / JavaScript 脚本方案，设计与 ZLua 对齐。",
+    "description": "Homepage meta description"
+  },
+  "homepage.feature.easy.title": {
+    "message": "更易用 · 零配置",
+    "description": "Feature 1 title"
+  },
+  "homepage.feature.easy.desc": {
+    "message": "声明式 GetFunction / [TsMarshalAs]，CSharp 懒绑定；无需 per-type Wrap 白名单。与 ZLua 同一套产品心智。",
+    "description": "Feature 1 description"
+  },
+  "homepage.feature.ts.title": {
+    "message": "TypeScript 一等公民",
+    "description": "Feature 2 title"
+  },
+  "homepage.feature.ts.desc": {
+    "message": "官方 TsProject 工作流、csharp: 声明、进 Play 闸门；运行时仍只执行 emit 后的 ES module。",
+    "description": "Feature 2 description"
+  },
+  "homepage.feature.il2cpp.title": {
+    "message": "Il2Cpp 就绪 · 双运行时",
+    "description": "Feature 3 title"
+  },
+  "homepage.feature.il2cpp.desc": {
+    "message": "Editor Mono 便于迭代；Player Il2Cpp 走 C++ 桥，签名复用 stub，ByVal / Registry Marshal。",
+    "description": "Feature 3 description"
+  }
+}

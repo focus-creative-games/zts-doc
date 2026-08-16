@@ -1,0 +1,66 @@
+{
+  "homepage.title": {
+    "message": "ZTS Docs",
+    "description": "Homepage hero title"
+  },
+  "homepage.tagline": {
+    "message": "Zero-config · Full C# interop · TypeScript / JavaScript on QuickJS",
+    "description": "Homepage tagline"
+  },
+  "homepage.cta.quickStart": {
+    "message": "5-minute quick start",
+    "description": "Homepage primary CTA"
+  },
+  "homepage.cta.demo": {
+    "message": "View Demo",
+    "description": "Homepage demo CTA"
+  },
+  "homepage.heroMeta": {
+    "message": "Unity 2022.3 LTS · QuickJS · Editor Mono + Il2Cpp Player · aligned with ZLua",
+    "description": "Homepage hero meta line"
+  },
+  "homepage.codePreview.title": {
+    "message": "Bidirectional calls at a glance",
+    "description": "Homepage code preview heading"
+  },
+  "homepage.tab.cs2js": {
+    "message": "C# → JS",
+    "description": "Homepage code tab"
+  },
+  "homepage.tab.js2cs": {
+    "message": "JS/TS → C#",
+    "description": "Homepage code tab"
+  },
+  "homepage.layoutTitle": {
+    "message": "Home",
+    "description": "Homepage document title"
+  },
+  "homepage.layoutDesc": {
+    "message": "ZTS: Unity TypeScript/JavaScript scripting on QuickJS, aligned with ZLua.",
+    "description": "Homepage meta description"
+  },
+  "homepage.feature.easy.title": {
+    "message": "Easier · zero-config",
+    "description": "Feature 1 title"
+  },
+  "homepage.feature.easy.desc": {
+    "message": "Declarative GetFunction / [TsMarshalAs], lazy CSharp loading; no per-type Wrap allowlist. Same product mental model as ZLua.",
+    "description": "Feature 1 description"
+  },
+  "homepage.feature.ts.title": {
+    "message": "TypeScript first-class",
+    "description": "Feature 2 title"
+  },
+  "homepage.feature.ts.desc": {
+    "message": "Official TsProject workflow, csharp: typings, Play-mode gate; runtime still runs emitted ES modules on QuickJS.",
+    "description": "Feature 2 description"
+  },
+  "homepage.feature.il2cpp.title": {
+    "message": "Il2Cpp-ready · dual runtime",
+    "description": "Feature 3 title"
+  },
+  "homepage.feature.il2cpp.desc": {
+    "message": "Editor Mono for iteration; Player Il2Cpp C++ bridge with signature-merged stubs and ByVal / Registry marshaling.",
+    "description": "Feature 3 description"
+  }
+}

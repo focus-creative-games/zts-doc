@@ -1,0 +1,10 @@
+{
+  "label": "构建",
+  "position": 40,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "description": "QuickJS 引擎构建集成、Editor Mono callback gate、JS 调试器 hook 与原生 C 模块。"
+  }
+}

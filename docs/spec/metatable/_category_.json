@@ -1,0 +1,10 @@
+{
+  "label": "属性分派（metatable）",
+  "position": 20,
+  "collapsible": true,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "description": "Exotic object 布局、属性索引与绑定。"
+  }
+}
