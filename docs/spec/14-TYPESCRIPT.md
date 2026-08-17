@@ -3,15 +3,15 @@ sidebar_position: 14
 title: "TypeScript 工作流"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`14-TYPESCRIPT.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`14-TYPESCRIPT.md`）
 :::
 
 
 # 14 — TypeScript 工作流
 
-> 约定 ZTS 工程如何用 **TypeScript 编写业务脚本**、生成 **`csharp:` 声明**、检查与发布到 QuickJS。
+> 约定 ZenTS 工程如何用 **TypeScript 编写业务脚本**、生成 **`csharp:` 声明**、检查与发布到 QuickJS。
 > **不改变** JavaScript 可见互操作语义；运行时仍只加载 ES module 源码（[01-HOST-API.md](./01-HOST-API.md) §1.3）。
-> `csharp:` specifier / 导出名 → [02-TYPE-SYSTEM.md](./02-TYPE-SYSTEM.md) §2.11；`zts.*` → [05-LIB.md](./05-LIB.md)；调试 → [build/04-JS-DEBUGGER.md](./build/04-JS-DEBUGGER.md)。
+> `csharp:` specifier / 导出名 → [02-TYPE-SYSTEM.md](./02-TYPE-SYSTEM.md) §2.11；`zents.*` → [05-LIB.md](./05-LIB.md)；调试 → [build/04-JS-DEBUGGER.md](./build/04-JS-DEBUGGER.md)。
 
 **冲突裁决：** 本文与 `02` / `marshal` / `metatable` 冲突时，以那些文档的 **JS 语义** 为准。本文只约束编辑期 DX、工程布局与发布管线。
 
@@ -56,14 +56,14 @@ title: "TypeScript 工作流"
 ## 2. 分层
 
 ```
-IDE / CI          tsc --noEmit  +  generated/*.d.ts + zts.d.ts
+IDE / CI          tsc --noEmit  +  generated/*.d.ts + zents.d.ts
 Emit              tsc 或 esbuild 1:1 ESM（.ts → .js + .js.map）
-Runtime           moduleLoader / csharp: / CSharp / zts   ← 既有语义
+Runtime           moduleLoader / csharp: / CSharp / zents   ← 既有语义
 ```
 
 | 层 | 工具 | 职责 |
 |----|------|------|
-| 类型 | 包内 `zts.d.ts` + 生成的 `declare module "csharp:…"` | 仅编辑期 |
+| 类型 | 包内 `zents.d.ts` + 生成的 `declare module "csharp:…"` | 仅编辑期 |
 | 检查 | `tsc --noEmit` | CI、提交前、进 Play 闸门 |
 | 发布 | esbuild **不打包** 的 1:1 transpile（或 `tsc` emit） | 产出 JS；**不** minify export 名 |
 
@@ -89,13 +89,13 @@ Runtime           moduleLoader / csharp: / CSharp / zts   ← 既有语义
       main.js
       main.js.map
       game/logic.js
-  Assets/StreamingAssets/ZTS/    # Player 构建拷贝；非 Editor 热路径权威源
-  Packages/com.code-philosophy.zts/ZTS~/types/
-    zts.d.ts
+  Assets/StreamingAssets/ZenTS/    # Player 构建拷贝；非 Editor 热路径权威源
+  Packages/com.code-philosophy.zen-ts/ZenTS~/types/
+    zents.d.ts
     tsconfig.base.json
 ```
 
-菜单 **`ZTS/Init TypeScript Project`**：把包内脚手架 **复制** 到 `TsProject/`（UPM 只读，不在包内直接改工程 tsconfig）。
+菜单 **`ZenTS/Init TypeScript Project`**：把包内脚手架 **复制** 到 `TsProject/`（UPM 只读，不在包内直接改工程 tsconfig）。
 
 | 路径 | 版本库 |
 |------|--------|
@@ -103,7 +103,7 @@ Runtime           moduleLoader / csharp: / CSharp / zts   ← 既有语义
 | `TsProject/generated/**` | **入库** |
 | `TsProject/package.json`、`tsconfig.json` | **入库** |
 | `TsProject/out/**`、`node_modules/` | **gitignore** |
-| `Assets/StreamingAssets/ZTS/**` | Player 构建产物；**不**当作 Editor 开发权威源（可 gitignore 或由构建写入） |
+| `Assets/StreamingAssets/ZenTS/**` | Player 构建产物；**不**当作 Editor 开发权威源（可 gitignore 或由构建写入） |
 
 手写回归测试仍可放在 `StreamingAssets/Tests/Js`（纯 JS）；**不**强制迁 TS。
 
@@ -150,12 +150,12 @@ emit 保留该字符串。QuickJS `module_normalize` 相对当前模块解析后
 
 ## 5. 包内手写类型
 
-`ZTS~/types/zts.d.ts` 随 UPM 分发，覆盖：
+`ZenTS~/types/zents.d.ts` 随 UPM 分发，覆盖：
 
-- 全局 `zts`、`CSharp`、`console`（无 DOM）
-- `zts.*` 与 [05-LIB.md](./05-LIB.md) **一一对应**
+- 全局 `zents`、`CSharp`、`console`（无 DOM）
+- `zents.*` 与 [05-LIB.md](./05-LIB.md) **一一对应**
 - `CSharp` 为宽松索引签名（精确补全走 §6 生成模块）
-- `ZTS.OpaqueHandle`、`ZTS.SzArray`、`ZTS.GenericDef<N>` 等 branded / 辅助类型
+- `ZenTS.OpaqueHandle`、`ZenTS.SzArray`、`ZenTS.GenericDef<N>` 等 branded / 辅助类型
 
 `tsconfig.base.json` 锁定：
 
@@ -167,7 +167,7 @@ emit 保留该字符串。QuickJS `module_normalize` 相对当前模块解析后
 | `noEmit` | 仅用于「检查」tsconfig；emit 用另一 profile 或 esbuild |
 | `erasableSyntaxOnly` | **开启**（禁止 `enum` / `namespace` / 参数属性等非擦除语法） |
 | `verbatimModuleSyntax` | **开启** |
-| `types` / `include` | 包内 `zts.d.ts` + `TsProject/src` + `TsProject/generated` |
+| `types` / `include` | 包内 `zents.d.ts` + `TsProject/src` + `TsProject/generated` |
 
 C# 类型是 **值**：必须 `import { Panel } from "csharp:…"`，**禁止** `import type { Panel }`。
 
@@ -198,7 +198,7 @@ declare module "csharp:Assembly-CSharp/MyGame.UI" {
 
 ### 6.2 类型集 = Il2Cpp Generate
 
-生成器 **读取与 Il2Cpp Generate 相同的类型/成员集合**（EnsureBinding 会写入三表的 public 成员；含 `[TsAlias]` / `[TsExtension]` / MarshalAs 配置的最终 JS 面）。
+生成器 **读取与 Il2Cpp Generate 相同的类型/成员集合**（EnsureBinding 会写入三表的 public 成员；含 `[JsAlias]` / `[JsExtension]` / MarshalAs 配置的最终 JS 面）。
 
 | 允许 | 禁止 |
 |------|------|
@@ -208,7 +208,7 @@ declare module "csharp:Assembly-CSharp/MyGame.UI" {
 
 Generate 未包含的类型 **不得** 出现在 `csharp:` named export 声明中（否则 Editor 能补全、Player 缺失）。
 
-菜单：**`ZTS/Generate Typings`**；亦可挂在 **`ZTS/Generate/All`** 之后。C# / 桥接配置变更后须重新生成并 **提交** `generated/`。
+菜单：**`ZenTS/Generate Typings`**；亦可挂在 **`ZenTS/Generate/All`** 之后。C# / 桥接配置变更后须重新生成并 **提交** `generated/`。
 
 ### 6.3 成员到 TS 的映射
 
@@ -218,23 +218,23 @@ Generate 未包含的类型 **不得** 出现在 `csharp:` named export 声明�
 | struct | `class` + `static _default(): T` | |
 | enum | 常量对象 + `type` 为 `number` | **禁止** bigint |
 | 静态类 | `private constructor()` | |
-| 开放泛型定义 | `export const List: ZTS.GenericDef<1>`（及 `List$1`） | **不是** `class List<T>`；`new List()` 须为类型错误 |
+| 开放泛型定义 | `export const List: ZenTS.GenericDef<1>`（及 `List$1`） | **不是** `class List<T>`；`new List()` 须为类型错误 |
 | 嵌套类型 | 仅声明类型模块 | **不** 生成 `Outer.Inner` 静态字段 |
 | 无参属性 | 属性 | 只写则仅 setter |
 | 有参属性 / 索引器 | `get_*` / `set_*` 方法 | 不要伪装 `obj[i]` |
 | 事件 | `add_*` / `remove_*` | 无 Event 子对象 |
 | 重载 | 多条函数签名 | 运行时仍 dispatch（[04-METHOD-OVERLOAD.md](./04-METHOD-OVERLOAD.md)） |
-| `ref` / `out` / `in` | `ZTS.OpaqueHandle<…>`（C#→JS 默认） | 见 marshal byref |
+| `ref` / `out` / `in` | `ZenTS.OpaqueHandle<…>`（C#→JS 默认） | 见 marshal byref |
 | delegate 形参 | 可调用函数类型 | 可传 JS function |
-| szarray 实例 | `ZTS.SzArray<T>`（`get` / `set` / `length`） | **不是** `T[]`；`T[]` 仅 `zts.to_array` 返回值 |
+| szarray 实例 | `ZenTS.SzArray<T>`（`get` / `set` / `length`） | **不是** `T[]`；`T[]` 仅 `zents.to_array` 返回值 |
 
-闭合泛型 / 数组类型对象：继续 `zts.make_*`；其返回值在 **P3 之前** 可为 `ZTS.TypeObject`（`new` 实例宽类型）。
+闭合泛型 / 数组类型对象：继续 `zents.make_*`；其返回值在 **P3 之前** 可为 `ZenTS.TypeObject`（`new` 实例宽类型）。
 
 ### 6.4 分期（声明精度）
 
 | 期 | 声明内容 |
 |----|----------|
-| **P0** | 手写 `zts.d.ts` + 宽松 `CSharp`；尚无生成 `csharp:` 也可写 TS（`csharp:` import 需 `declare module` 或临时 `any`） |
+| **P0** | 手写 `zents.d.ts` + 宽松 `CSharp`；尚无生成 `csharp:` 也可写 TS（`csharp:` import 需 `declare module` 或临时 `any`） |
 | **P1** | 按 Generate 集生成 `csharp:`：class / struct / enum + 成员（开放泛型为 `GenericDef`） |
 | **P3** | `make_generic_type` 泛型推断、重载签名细化、可选 `GetFunction` 导出核对 |
 
@@ -296,7 +296,7 @@ Settings（概念字段，实现名可对齐 `TsSettings`）：
 
 1. 可选：再跑 `tsc --noEmit`（失败中断出包）
 2. emit 到 `out/`
-3. 拷贝 `out/**/*.js`（及可选 `.map`）→ `StreamingAssets/ZTS/`
+3. 拷贝 `out/**/*.js`（及可选 `.map`）→ `StreamingAssets/ZenTS/`
 4. Player `moduleLoader` **只** 读 StreamingAssets，**不** 依赖 Node、**不** 读 `.ts`
 
 ---
@@ -304,7 +304,7 @@ Settings（概念字段，实现名可对齐 `TsSettings`）：
 ## 9. IDE 与调试
 
 - 用 VS Code / Cursor 打开 `TsProject/`，或 Unity 工程 + `TsProject` 的 multi-root。
-- `include`：`src`、`generated`、包内 `zts.d.ts`。
+- `include`：`src`、`generated`、包内 `zents.d.ts`。
 - emit **必须** 带 source map。调试 hook 把 logical path 映射到 `TsProject/src/**`（[build/04-JS-DEBUGGER.md](./build/04-JS-DEBUGGER.md)）。
 - `csharp:` 合成模块无源码；断点打在业务 `.ts`。
 - `erasableSyntaxOnly` 下 map 接近 1:1。
@@ -314,7 +314,7 @@ Settings（概念字段，实现名可对齐 `TsSettings`）：
 ## 10. `GetFunction` 与导出
 
 ```csharp
-TsAppDomain.GetFunction<Action<float>>("game/logic", "OnTick");
+JsAppDomain.GetFunction<Action<float>>("game/logic", "OnTick");
 ```
 
 ```typescript
@@ -335,7 +335,7 @@ P3 可增加「TS 导出 ↔ `GetFunction` 签名」核对；**非** v1 硬性�
 | 官方工作流 | [12-MIGRATION-ADAPTORS.md](./12-MIGRATION-ADAPTORS.md) |
 |------------|------------------------------------------------------|
 | `import { GameObject } from "csharp:UnityEngine.CoreModule/UnityEngine"` | `CS.UnityEngine.GameObject` |
-| `tsconfig` **不** 包含 `CS` 全局 | 迁移工程可另生成 `cs-global.d.ts`，**不** 随 `zts.d.ts` 安装 |
+| `tsconfig` **不** 包含 `CS` 全局 | 迁移工程可另生成 `cs-global.d.ts`，**不** 随 `zents.d.ts` 安装 |
 
 新项目 **不** 安装 adaptor。
 
@@ -361,7 +361,7 @@ P3 可增加「TS 导出 ↔ `GetFunction` 签名」核对；**非** v1 硬性�
 |------|------|
 | [01-HOST-API.md](./01-HOST-API.md) | `moduleLoader`、`GetFunction`、canonical specifier |
 | [02-TYPE-SYSTEM.md](./02-TYPE-SYSTEM.md) §2.11 | `csharp:` 运行时模块 |
-| [05-LIB.md](./05-LIB.md) | `zts.*` ↔ `zts.d.ts` |
-| [11-MULTI-VERSION.md](./11-MULTI-VERSION.md) | `ZTS~/types` 包内布局 |
+| [05-LIB.md](./05-LIB.md) | `zents.*` ↔ `zents.d.ts` |
+| [11-MULTI-VERSION.md](./11-MULTI-VERSION.md) | `ZenTS~/types` 包内布局 |
 | [12-MIGRATION-ADAPTORS.md](./12-MIGRATION-ADAPTORS.md) | 非官方 `CS.*` |
 | [build/04-JS-DEBUGGER.md](./build/04-JS-DEBUGGER.md) | source map → `TsProject/src` |

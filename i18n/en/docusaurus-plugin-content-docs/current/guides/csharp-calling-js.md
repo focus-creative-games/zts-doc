@@ -1,24 +1,24 @@
 ---
 sidebar_position: 4
 title: "C# 调用 JS"
-description: TsAppDomain.GetFunction、ES named export 与 Editor/Player 加载路径。
+description: JsAppDomain.GetFunction、ES named export 与 Editor/Player 加载路径。
 ---
 
 # C# 调用 JS
 
-用 **`TsAppDomain.GetFunction<T>`** 按模块 specifier 与 **named export** 取得绑定好的 Delegate，再调用。Editor 与 Player **API 相同**。
+用 **`JsAppDomain.GetFunction<T>`** 按模块 specifier 与 **named export** 取得绑定好的 Delegate，再调用。Editor 与 Player **API 相同**。
 
-Canonical：[zts-demo](https://github.com/focus-creative-games/zts-demo) 中的 Bootstrap / `AppAdd` 样例。
+Canonical：[zen-ts-demo](https://github.com/focus-creative-games/zen-ts-demo) 中的 Bootstrap / `AppAdd` 样例。
 
 ## 基本用法
 
 ```csharp
-TsAppDomain.Initialize(LoadJsModule);
+JsAppDomain.Initialize(LoadJsModule);
 
-var main = TsAppDomain.GetFunction<Action>("app", "main");
+var main = JsAppDomain.GetFunction<Action>("app", "main");
 main();
 
-var add = TsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
+var add = JsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
 int sum = add(10, 20); // 30
 ```
 
@@ -52,7 +52,7 @@ Delegate 类型 `T` 决定参数与返回值的 Marshal（见 [委托与函数](
 |------|----------|
 | Editor（纯 JS） | `{ProjectRoot}/JsScripts/app.js` |
 | Editor（TS） | `TsProject/out/app.js`（canonical 仍是 `"app"`） |
-| Player | `StreamingAssets/Js/app.js` 或 `StreamingAssets/ZTS/app.js` |
+| Player | `StreamingAssets/Js/app.js` 或 `StreamingAssets/ZenTS/app.js` |
 
 ```csharp
 private static object LoadJsModule(string module)
@@ -73,13 +73,13 @@ private static object LoadJsModule(string module)
 - 子路径用 POSIX 风格：`"game/logic"` → `…/game/logic.js`
 - **`csharp:` 不是**业务入口：其 named export 是类型对象；误用 `GetFunction` 会因「非 callable」抛 C# 异常
 - Player 构建前须 Sync / 拷贝 emit 产物，见 [构建](/docs/guides/build/)
-- 热更用 `TsAppDomain.Reset(loader)`（EndOfFrame 生效；旧 `GetFunction` 委托作废，须重新绑定）。**已初始化**时再次 `Initialize` 会抛异常，**不能**「只换 loader」
+- 热更用 `JsAppDomain.Reset(loader)`（EndOfFrame 生效；旧 `GetFunction` 委托作废，须重新绑定）。**已初始化**时再次 `Initialize` 会抛异常，**不能**「只换 loader」
 
 ### 多模块
 
 ```csharp
-var appMain = TsAppDomain.GetFunction<Action>("app", "main");
-var onTick = TsAppDomain.GetFunction<Action<float>>("game/logic", "OnTick");
+var appMain = JsAppDomain.GetFunction<Action>("app", "main");
+var onTick = JsAppDomain.GetFunction<Action<float>>("game/logic", "OnTick");
 ```
 
 ```js
@@ -118,6 +118,6 @@ export function OnTick(dt) {
 ## 相关文档
 
 - [宿主 API](/docs/spec/01-HOST-API/)
-- [TsAppDomain 参考](/docs/reference/ts-app-domain/)
+- [JsAppDomain 参考](/docs/reference/js-app-domain/)
 - [委托与函数](/docs/guides/functions/)
 - [构建](/docs/guides/build/)

@@ -6,7 +6,7 @@ description: byref 参数的默认 Opaque 行为与写回规则。
 
 # ref / out / in
 
-权威：[BYREF](/docs/spec/marshal/03-BYREF/)、[OPAQUE](/docs/spec/marshal/04-OPAQUE/)。特性级强制形态见 [TsMarshalAs](/docs/guides/ts-marshal-as/)；少分配套路见 [少 GC Marshal](/docs/guides/zero-gc-marshal/)。
+权威：[BYREF](/docs/spec/marshal/03-BYREF/)、[OPAQUE](/docs/spec/marshal/04-OPAQUE/)。特性级强制形态见 [JsMarshalAs](/docs/guides/js-marshal-as/)；少分配套路见 [少 GC Marshal](/docs/guides/zero-gc-marshal/)。
 
 ## 双路径摘要
 
@@ -31,7 +31,7 @@ const p = new Point2D(1, 2);
 Demo.Offset(p);             // ref Point2D：字段可写回 p
 ```
 
-类型不兼容 → `throw Error('zts: …')`。必选 byref 传 `undefined`（临时槽路径）通常 **throw**；需观察写回时传 ByVal exotic 或有效 Opaque。
+类型不兼容 → `throw Error('zents: …')`。必选 byref 传 `undefined`（临时槽路径）通常 **throw**；需观察写回时传 ByVal exotic 或有效 Opaque。
 
 ## Opaque 读写
 
@@ -39,14 +39,14 @@ C#→JS 拿到的 byref 槽位通常是 Opaque：
 
 ```javascript
 // 在同一次同步调用链内
-const v = zts.get_opaquevalue(slot);
-zts.set_opaquevalue(slot, newValue);
+const v = zents.get_opaquevalue(slot);
+zents.set_opaquevalue(slot, newValue);
 ```
 
-对 `ref Point2D` 等值类型形参，传入同型 **ByVal exotic**（如 `new Point2D(1, 2)`）即可写回；无需额外 API。详见 [值类型](/docs/guides/value-types/)、[zts 标准库](/docs/guides/zts-lib/)。
+对 `ref Point2D` 等值类型形参，传入同型 **ByVal exotic**（如 `new Point2D(1, 2)`）即可写回；无需额外 API。详见 [值类型](/docs/guides/value-types/)、[zents 标准库](/docs/guides/zents-lib/)。
 
 :::warning
-Opaque **不可**跨异步边界 / 跨帧持久化当长期句柄用。需要 ByVal 门面时用 `zts.to_user_data`（见规范）。失效后访问 → `throw Error('zts: invalid opaque parameter handle')`。
+Opaque **不可**跨异步边界 / 跨帧持久化当长期句柄用。需要 ByVal 门面时用 `zents.to_user_data`（见规范）。失效后访问 → `throw Error('zents: invalid opaque parameter handle')`。
 :::
 
 ## 分类要点
@@ -65,6 +65,6 @@ by-val struct 是 **拷贝**；要「改字段并反映到 C#」须对 `ref` 形
 
 - [BYREF](/docs/spec/marshal/03-BYREF/)
 - [OPAQUE](/docs/spec/marshal/04-OPAQUE/)
-- [TsMarshalAs](/docs/guides/ts-marshal-as/)
+- [JsMarshalAs](/docs/guides/js-marshal-as/)
 - [少 GC Marshal](/docs/guides/zero-gc-marshal/)
 - [值类型](/docs/guides/value-types/)

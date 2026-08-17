@@ -1,6 +1,6 @@
 {
   "homepage.title": {
-    "message": "ZTS Docs",
+    "message": "ZenTS Docs",
     "description": "Homepage hero title"
   },
   "homepage.tagline": {
@@ -16,7 +16,7 @@
     "description": "Homepage demo CTA"
   },
   "homepage.heroMeta": {
-    "message": "Unity 2022.3 LTS · QuickJS · Editor Mono + Il2Cpp Player · aligned with ZLua",
+    "message": "Unity 2021.3 / 2022.3 / 6000 · Tuanjie · QuickJS · Editor Win/macOS · Player: Win64 / Android / iOS / WebGL / Mini Games / HarmonyOS",
     "description": "Homepage hero meta line"
   },
   "homepage.codePreview.title": {
@@ -36,7 +36,7 @@
     "description": "Homepage document title"
   },
   "homepage.layoutDesc": {
-    "message": "ZTS: Unity TypeScript/JavaScript scripting on QuickJS, aligned with ZLua.",
+    "message": "ZenTS: Unity TypeScript/JavaScript scripting on QuickJS, aligned with ZLua.",
     "description": "Homepage meta description"
   },
   "homepage.feature.easy.title": {
@@ -44,7 +44,7 @@
     "description": "Feature 1 title"
   },
   "homepage.feature.easy.desc": {
-    "message": "Declarative GetFunction / [TsMarshalAs], lazy CSharp loading; no per-type Wrap allowlist. Same product mental model as ZLua.",
+    "message": "Declarative GetFunction / [JsMarshalAs], lazy CSharp loading; no per-type Wrap allowlist. Same product mental model as ZLua.",
     "description": "Feature 1 description"
   },
   "homepage.feature.ts.title": {

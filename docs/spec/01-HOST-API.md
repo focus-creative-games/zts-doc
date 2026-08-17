@@ -1,5 +1,5 @@
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`01-HOST-API.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`01-HOST-API.md`）
 :::
 
 ﻿---
@@ -9,24 +9,24 @@ title: "宿主 API"
 
 # 01 — 宿主 API
 
-> `TsAppDomain`（含 **`GetFunction`**）、**`[TsMarshalAs]`**、**`[TsAlias]`**。
+> `JsAppDomain`（含 **`GetFunction`**）、**`[JsMarshalAs]`**、**`[JsAlias]`**。
 > C#→JS / JS→C# Marshal 细节见 [marshal/](/docs/spec/marshal/)。
 
 ---
 
-## 1. `TsAppDomain`
+## 1. `JsAppDomain`
 
 ### 1.1 职责
 
-`ZTS.TsAppDomain` 是宿主唯一推荐的初始化门面。Common **不** 引用 Mono/Il2Cpp；在 `Initialize` / `GetFunction` 时按环境 **反射创建** 后端嵌套类型 `Runtime : ITsRuntime`：
+`ZenTS.JsAppDomain` 是宿主唯一推荐的初始化门面。Common **不** 引用 Mono/Il2Cpp；在 `Initialize` / `GetFunction` 时按环境 **反射创建** 后端嵌套类型 `Runtime : IJsRuntime`：
 
 | 环境 | 后端宿主类型 | 程序集 | 创建方式 |
 |------|--------------|--------|----------|
-| Editor | `TsMonoAppDomain` | `ZTS.Mono` | `Activator.CreateInstance(…+Runtime)` |
-| Player | `TsIl2CppAppDomain` | `ZTS.Il2Cpp` | 同上（`#if !UNITY_EDITOR` 分支） |
+| Editor | `JsMonoAppDomain` | `ZenTS.Mono` | `Activator.CreateInstance(…+Runtime)` |
+| Player | `JsIl2CppAppDomain` | `ZenTS.Il2Cpp` | 同上（`#if !UNITY_EDITOR` 分支） |
 
 ```csharp
-public interface ITsRuntime
+public interface IJsRuntime
 {
     void Initialize(Func<string, object> moduleLoader);
     void Reset(Func<string, object> moduleLoader);
@@ -34,7 +34,7 @@ public interface ITsRuntime
     Delegate GetFunction(Type delegateType, string jsModule, string jsExportName);
 }
 
-public static class TsAppDomain
+public static class JsAppDomain
 {
     public static void Initialize(Func<string, object> moduleLoader);
     public static void Reset(Func<string, object> moduleLoader);
@@ -42,7 +42,7 @@ public static class TsAppDomain
     public static T GetFunction<T>(string jsModule, string jsExportName)
         where T : MulticastDelegate;
 
-    internal static void ProcessPendingRefReleases(); // 由 TsFramePump 驱动
+    internal static void ProcessPendingRefReleases(); // 由 JsFramePump 驱动
 }
 ```
 
@@ -55,7 +55,7 @@ public static class TsAppDomain
 
 | API | 行为 |
 |-----|------|
-| `Reset(loader)` | **仅预约**：保存 loader，在本帧 **EndOfFrame**（`TsFramePump` / `WaitForEndOfFrame`）才真正执行 teardown + 重建。多次预约以最后一次 loader 为准。真正执行时：排空 pending ref → 关闭 Registry / 模块缓存 → 释放 JS 运行时 → 新建 `JSRuntime`+`JSContext` 并安装 `loader`。Il2Cpp 进程级 Bridge / XML 表 / InternalCall **保留**。 |
+| `Reset(loader)` | **仅预约**：保存 loader，在本帧 **EndOfFrame**（`JsFramePump` / `WaitForEndOfFrame`）才真正执行 teardown + 重建。多次预约以最后一次 loader 为准。真正执行时：排空 pending ref → 关闭 Registry / 模块缓存 → 释放 JS 运行时 → 新建 `JSRuntime`+`JSContext` 并安装 `loader`。Il2Cpp 进程级 Bridge / XML 表 / InternalCall **保留**。 |
 | `Initialize(loader)` | 仅首次（或进程内尚无主上下文）创建 JS 运行时并安装 loader。**已初始化**时再次调用 → **抛异常**（须 `Reset`；**不**再支持「只换 loader」）。 |
 
 **契约：**
@@ -75,12 +75,12 @@ public static class TsAppDomain
 - 模块 specifier 与 `GetFunction` 的 `jsModule` 字符串一致。**canonical 不含** `.js` / `.ts`（如 `"main"`、`"game/logic"`）；完整规则见 [14-TYPESCRIPT.md](./14-TYPESCRIPT.md) §4
 - loader 失败应抛出明确异常，避免 silent 空模块
 - 模块须为 **ES module** 语法（`export` / `import`）；CommonJS `module.exports` **不在** v1 规范范围
-- **保留前缀 `csharp:`**：ZTS 在宿主 `moduleLoader` **之前** 拦截，合成 CLR 类型模块（[02-TYPE-SYSTEM.md](./02-TYPE-SYSTEM.md) §2.11）。**禁止** 把 `csharp:` specifier 传给业务 loader。`module_normalize` 对 `csharp:` 开头的名字 **原样返回**（不得按相对路径改写）
+- **保留前缀 `csharp:`**：ZenTS 在宿主 `moduleLoader` **之前** 拦截，合成 CLR 类型模块（[02-TYPE-SYSTEM.md](./02-TYPE-SYSTEM.md) §2.11）。**禁止** 把 `csharp:` specifier 传给业务 loader。`module_normalize` 对 `csharp:` 开头的名字 **原样返回**（不得按相对路径改写）
 - 进入 `moduleLoader` / 模块缓存键前，将非 `csharp:` specifier **规范为 canonical**（去掉尾缀 `.js` / `.mjs` / `.ts`）。磁盘上的 emit 文件可以是 `out/game/logic.js`，逻辑名仍是 `game/logic`
 
 **Loader 解析顺序（概念）：**
 
-1. specifier 以 `csharp:` 开头 → ZTS 合成类型模块；程序集 miss 按类型系统规则 throw
+1. specifier 以 `csharp:` 开头 → ZenTS 合成类型模块；程序集 miss 按类型系统规则 throw
 2. 已注册的第三方原生 C 模块（[build/05-NATIVE-MODULES.md](./build/05-NATIVE-MODULES.md)）
 3. 宿主 `moduleLoader(specifier)` → ES 源码
 
@@ -92,7 +92,7 @@ public static class TsAppDomain
 
 ### 1.4 帧泵
 
-`TsAppDomain.Initialize` 注册 `TsFramePump`：`LateUpdate` 排空 pending ref；`WaitForEndOfFrame` 执行已预约的 `Reset`。详见 `10-LIFETIME.md`。
+`JsAppDomain.Initialize` 注册 `JsFramePump`：`LateUpdate` 排空 pending ref；`WaitForEndOfFrame` 执行已预约的 `Reset`。详见 `10-LIFETIME.md`。
 
 ---
 
@@ -126,10 +126,10 @@ public static T GetFunction<T>(string jsModule, string jsExportName)
 
 ```csharp
 // 一次性 / 启动期取得
-var add = TsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
+var add = JsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
 int sum = add(10, 20);
 
-var onTick = TsAppDomain.GetFunction<Action<float>>("game", "OnTick");
+var onTick = JsAppDomain.GetFunction<Action<float>>("game", "OnTick");
 onTick(0.016f);
 ```
 
@@ -182,7 +182,7 @@ GetFunction<T>(module, exportName)
 Il2Cpp C# 层初始化仍为薄壳（与 `GetFunction` 无关）：
 
 ```csharp
-public static class TsIl2CppAppDomain
+public static class JsIl2CppAppDomain
 {
     [MethodImpl(MethodImplOptions.InternalCall)]
     private static extern void InitializeInternal(Func<string, object> moduleLoader);
@@ -194,7 +194,7 @@ public static class TsIl2CppAppDomain
 
 ---
 
-## 3. `[TsMarshalAs]` — Marshal 标注
+## 3. `[JsMarshalAs]` — Marshal 标注
 
 ### 3.1 作用范围
 
@@ -204,13 +204,13 @@ public static class TsIl2CppAppDomain
 | **返回值** | 控制 C#→JS 返回 Push |
 | **字段 / 属性** | 控制成员读写时的 marshal（codegen 消费） |
 
-**禁止**标注在 **方法** 上（绑定期 `TsMarshalAsConfigurationException`）。
+**禁止**标注在 **方法** 上（绑定期 `JsMarshalAsConfigurationException`）。
 
 完整选项见 `spec/marshal/02-MARSHAL-AS.md`。
 
 ### 3.2 常用选项（概要）
 
-| `TsMarshalType` | 用途 |
+| `JsMarshalType` | 用途 |
 |-----------------|------|
 | `Default` | 按类型默认规则 |
 | `OpaqueValue` | C#→JS 强制 opaque 句柄（by-val 引用类型 / struct） |
@@ -230,19 +230,19 @@ public static class TsIl2CppAppDomain
 
 ---
 
-## 4. `[TsAlias]` — 方法 JS 别名
+## 4. `[JsAlias]` — 方法 JS 别名
 
 ```csharp
-[TsAlias("run_i32")]
+[JsAlias("run_i32")]
 public void Run(int value) { ... }
 
-[TsAlias("Foo")]   // 允许与已有方法名 / 其它别名重复
+[JsAlias("Foo")]   // 允许与已有方法名 / 其它别名重复
 public void Bar(string s) { ... }
 ```
 
-- 定义于 `ZTS.Common`
+- 定义于 `ZenTS.Common`
 - **等价于**用该字符串作为该方法的 **唯一最终 JS 名**（**替换**默认名 `MethodInfo.Name`，不再双挂）
-- 预编译 DLL 可用 **独立** XML（Settings **`tsAliasXmlPaths`**，根元素 `TsAlias`）；**不得**写进 MarshalAs XML
+- 预编译 DLL 可用 **独立** XML（Settings **`jsAliasXmlPaths`**，根元素 `JsAlias`）；**不得**写进 MarshalAs XML
 - **允许**与其它别名或已有方法名重复；重复时该最终名下多候选，调用走 **重载分派**（见 `04-METHOD-OVERLOAD.md` §5）
 - 若某最终名下仅此一候选（例如独立的 `run_i32`），则为 **direct function**
 
@@ -264,7 +264,7 @@ JS 调用 C# 成员时，native 在 **EnsureBinding** 阶段为每个 public 成
 
 | 方向 | 行为 |
 |------|------|
-| JS `throw` | 捕获为 C# 异常（`TsException` 或包装类型）；**不**泄漏未处理 native 异常到托管栈外 |
+| JS `throw` | 捕获为 C# 异常（`JsScriptException` 或包装类型）；**不**泄漏未处理 native 异常到托管栈外 |
 | C# 异常传入 native | 在边界转换为 JS throw 或记录后 rethrow（实现统一） |
 
 脚本 **不应** 依赖 try/catch 内捕获 C# 异常的具体类型字符串；仅保证「失败可检测」。
@@ -273,7 +273,7 @@ JS 调用 C# 成员时，native 在 **EnsureBinding** 阶段为每个 public 成
 
 | 方向 | 行为 |
 |------|------|
-| C# 抛异常 | 转换为 **`throw new Error('zts: …')`** 等价消息；Mono / Il2Cpp 文案一致或等价 |
+| C# 抛异常 | 转换为 **`throw new Error('zents: …')`** 等价消息；Mono / Il2Cpp 文案一致或等价 |
 | JS 侧 | 使用 `try/catch` 捕获 |
 
 ### 6.3 Opaque 与边界
@@ -286,8 +286,8 @@ Opaque handle **仅在** 产生它的那次 C#→JS 调用返回前有效；跨 
 
 | 项 | 约束 |
 |----|------|
-| `[TsAlias]` | 允许与默认名 / 其它别名重复；按最终名分组（见 overload §5） |
-| `[TsMarshalAs]` | 禁止 method 级；非法 `Members` → bind 失败 |
+| `[JsAlias]` | 允许与默认名 / 其它别名重复；按最终名分组（见 overload §5） |
+| `[JsMarshalAs]` | 禁止 method 级；非法 `Members` → bind 失败 |
 | Mono Emit | 无法 Emit 的签名 **必须显式失败**，禁止 silent `Method.Invoke` 热路径 |
 | Il2Cpp stub | 未覆盖签名 → 构建期或首次绑定失败（MethodBridge 等，见 `impl/codegen/`） |
 

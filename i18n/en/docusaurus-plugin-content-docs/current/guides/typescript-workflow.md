@@ -6,11 +6,11 @@ description: TsProject、Generate Typings、Compile、Play 闸门与 emit。
 
 # TypeScript 工作流
 
-ZTS 运行时只执行 **ES module（JS）**；TypeScript 是官方一等编辑与检查路径，**不改变** JavaScript 可见互操作语义。权威约定见 [spec/14-TYPESCRIPT](/docs/spec/14-TYPESCRIPT/)。
+ZenTS 运行时只执行 **ES module（JS）**；TypeScript 是官方一等编辑与检查路径，**不改变** JavaScript 可见互操作语义。权威约定见 [spec/14-TYPESCRIPT](/docs/spec/14-TYPESCRIPT/)。
 
 ## 一键初始化
 
-菜单 **`ZTS/Init TypeScript Project`** → 在工程根生成 `TsProject/`（`package.json`、`tsconfig.json`、`src/` 等）。也可直接使用 [ts-demo](https://github.com/focus-creative-games/zts-demo) 的 `TsProject/`。
+菜单 **`ZenTS/Init TypeScript Project`** → 在工程根生成 `TsProject/`（`package.json`、`tsconfig.json`、`src/` 等）。也可直接使用 [ts-demo](https://github.com/focus-creative-games/zen-ts-demo) 的 `TsProject/`。
 
 本机需要 **Node LTS**（调用 `npx tsc` / `npx esbuild`）。包 **不** 内嵌 tsc。
 
@@ -29,7 +29,7 @@ ZTS 运行时只执行 **ES module（JS）**；TypeScript 是官方一等编辑�
     out/                  # emit；默认 gitignore
       main.js
       main.js.map
-  Assets/StreamingAssets/ZTS/   # Player 构建拷贝；非 Editor 权威源
+  Assets/StreamingAssets/ZenTS/   # Player 构建拷贝；非 Editor 权威源
 ```
 
 | 路径 | 版本库 |
@@ -42,14 +42,14 @@ ZTS 运行时只执行 **ES module（JS）**；TypeScript 是官方一等编辑�
 ## 分层
 
 ```
-IDE / CI     tsc --noEmit  +  generated/*.d.ts + zts.d.ts
+IDE / CI     tsc --noEmit  +  generated/*.d.ts + zents.d.ts
 Emit         esbuild 1:1 或 tsc（.ts → .js + .js.map）
-Runtime      moduleLoader / csharp: / CSharp / zts
+Runtime      moduleLoader / csharp: / CSharp / zents
 ```
 
 | 层 | 工具 | 职责 |
 |----|------|------|
-| 类型 | 包内 `zts.d.ts` + 生成的 `declare module "csharp:…"` | 仅编辑期 |
+| 类型 | 包内 `zents.d.ts` + 生成的 `declare module "csharp:…"` | 仅编辑期 |
 | 检查 | `tsc --noEmit` | CI、提交前、进 Play 闸门 |
 | 发布 | esbuild **不打包** 的 1:1 transpile（或 `tsc` emit） | 产出 JS；**不** minify export 名 |
 
@@ -57,7 +57,7 @@ Runtime      moduleLoader / csharp: / CSharp / zts
 
 ## 日常循环
 
-1. （可选）菜单 **`ZTS/Generate Typings`**：刷新 `generated/csharp/**`，与 Il2Cpp **Generate** 类型集同源。
+1. （可选）菜单 **`ZenTS/Generate Typings`**：刷新 `generated/csharp/**`，与 Il2Cpp **Generate** 类型集同源。
 2. 编写 `src/**/*.ts`。
 3. **Compile**（esbuild 1:1 或 `tsc` emit）→ `out/`。
 4. 进 Play：若闸门开启，先 `tsc --noEmit`，失败则 **阻止 Play**。
@@ -78,8 +78,8 @@ export function add(a: number, b: number): number {
 
 ```csharp
 // C#：canonical 不含 .js
-var onTick = TsAppDomain.GetFunction<Action<float>>("game/logic", "OnTick");
-var add = TsAppDomain.GetFunction<Func<int, int, int>>("game/logic", "add");
+var onTick = JsAppDomain.GetFunction<Action<float>>("game/logic", "OnTick");
+var add = JsAppDomain.GetFunction<Func<int, int, int>>("game/logic", "add");
 ```
 
 Editor loader 读 `TsProject/out/{canonical}.js`。相对导入在源里写 `.js` 后缀（文件仍是 `.ts`）：
@@ -103,7 +103,7 @@ import { helper } from "./util.js"; // 源文件 util.ts
 | TypeScript Play 闸门 | **开** | 进 Play 前 `tsc --noEmit`；失败阻止 Play |
 | 闸门关闭 | Settings 可关 | 仍建议 CI 跑检查 |
 
-Player 构建：emit → 拷贝 `out/**/*.js`（及可选 `.map`）到 `StreamingAssets/ZTS/`；Player loader **只**读 StreamingAssets，**不**跑 Node、**不**读 `.ts`。见 [构建](/docs/guides/build/)。
+Player 构建：emit → 拷贝 `out/**/*.js`（及可选 `.map`）到 `StreamingAssets/ZenTS/`；Player loader **只**读 StreamingAssets，**不**跑 Node、**不**读 `.ts`。见 [构建](/docs/guides/build/)。
 
 ## 与纯 JS 的关系
 

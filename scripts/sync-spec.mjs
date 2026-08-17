@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Sync ZTSTest/Docs/spec → docs/spec, and GLOSSARY → docs/concepts/glossary.md.
- * Edit upstream ZTSTest/Docs/spec, then npm run sync-spec. Do not hand-edit docs/spec.
+ * Sync ZenTSTest/Docs/spec → docs/spec, and GLOSSARY → docs/concepts/glossary.md.
+ * Edit upstream ZenTSTest/Docs/spec, then npm run sync-spec. Do not hand-edit docs/spec.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -10,14 +10,25 @@ import {fileURLToPath} from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, '..');
 
-const defaultSpecSrc = path.resolve(root, '..', 'ZTSTest', 'Docs', 'spec');
-const defaultGlossarySrc = path.resolve(root, '..', 'ZTSTest', 'Docs', 'GLOSSARY.md');
-const specSrc = process.env.ZTS_SPEC_SRC
-  ? path.resolve(root, process.env.ZTS_SPEC_SRC)
-  : defaultSpecSrc;
-const glossarySrc = process.env.ZTS_GLOSSARY_SRC
-  ? path.resolve(root, process.env.ZTS_GLOSSARY_SRC)
-  : defaultGlossarySrc;
+function resolveUpstream(preferredParts, legacyParts, envKeys) {
+  for (const key of envKeys) {
+    if (process.env[key]) return path.resolve(root, process.env[key]);
+  }
+  const preferred = path.resolve(root, ...preferredParts);
+  if (fs.existsSync(preferred)) return preferred;
+  return path.resolve(root, ...legacyParts);
+}
+
+const specSrc = resolveUpstream(
+  ['..', 'ZenTSTest', 'Docs', 'spec'],
+  ['..', 'ZTSTest', 'Docs', 'spec'],
+  ['ZENTS_SPEC_SRC', 'ZTS_SPEC_SRC'],
+);
+const glossarySrc = resolveUpstream(
+  ['..', 'ZenTSTest', 'Docs', 'GLOSSARY.md'],
+  ['..', 'ZTSTest', 'Docs', 'GLOSSARY.md'],
+  ['ZENTS_GLOSSARY_SRC', 'ZTS_GLOSSARY_SRC'],
+);
 
 const specDest = path.join(root, 'docs', 'spec');
 const glossaryDest = path.join(root, 'docs', 'concepts', 'glossary.md');
@@ -74,7 +85,7 @@ function rewriteLinks(content, {isGlossary = false} = {}) {
 function ensureSpecBanner(content, rel) {
   const banner =
     `:::note 文档站副本\n` +
-    `本页为语义契约的发布副本；请在上游 \`ZTSTest/Docs/spec\` 修改后执行 \`npm run sync-spec\`。` +
+    `本页为语义契约的发布副本；请在上游 \`ZenTSTest/Docs/spec\` 修改后执行 \`npm run sync-spec\`。` +
     (rel ? `（源：\`${String(rel).replace(/\\\\/g, '/')}\`）` : '') +
     `\n:::\n\n`;
   if (content.includes('文档站副本')) return content;
@@ -112,14 +123,14 @@ if (fs.existsSync(glossarySrc)) {
   let g = fs.readFileSync(glossarySrc, 'utf8');
   if (!g.startsWith('---')) {
     g =
-      `---\nsidebar_position: 90\ntitle: 术语表\ndescription: ZTS / ZLua 对齐术语（从 ZTSTest Docs/GLOSSARY 同步）。\n---\n\n` +
+      `---\nsidebar_position: 90\ntitle: 术语表\ndescription: ZenTS / ZLua 对齐术语（从 ZenTSTest Docs/GLOSSARY 同步）。\n---\n\n` +
       g;
   }
   g = rewriteLinks(g, {isGlossary: true});
   if (!g.includes('文档站副本')) {
     g = g.replace(
       /^---\n([\s\S]*?)\n---\n/,
-      `---\n$1\n---\n\n:::note 文档站副本\n术语表上游为 \`ZTSTest/Docs/GLOSSARY.md\`；修改后执行 \`npm run sync-spec\`。\n:::\n\n`,
+      `---\n$1\n---\n\n:::note 文档站副本\n术语表上游为 \`ZenTSTest/Docs/GLOSSARY.md\`；修改后执行 \`npm run sync-spec\`。\n:::\n\n`,
     );
   }
   fs.writeFileSync(glossaryDest, g);

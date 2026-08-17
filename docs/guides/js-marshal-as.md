@@ -1,12 +1,12 @@
 ---
 sidebar_position: 18
-title: TsMarshalAs
+title: JsMarshalAs
 description: 覆盖默认 Marshal；Bytes / Opaque / UnpackedValues / Table / Object 与 XML。
 ---
 
-# TsMarshalAs
+# JsMarshalAs
 
-当默认 Marshal（见 [Marshal 总览](/docs/spec/marshal/01-OVERVIEW/)）不够用时，用 **`[TsMarshalAs]`** 或 **XML** 覆盖。权威全文：[02-MARSHAL-AS](/docs/spec/marshal/02-MARSHAL-AS/)。少分配专题见 [少 GC Marshal](/docs/guides/zero-gc-marshal/)。
+当默认 Marshal（见 [Marshal 总览](/docs/spec/marshal/01-OVERVIEW/)）不够用时，用 **`[JsMarshalAs]`** 或 **XML** 覆盖。权威全文：[02-MARSHAL-AS](/docs/spec/marshal/02-MARSHAL-AS/)。少分配专题见 [少 GC Marshal](/docs/guides/zero-gc-marshal/)。
 
 ## 何时需要
 
@@ -19,7 +19,7 @@ description: 覆盖默认 Marshal；Bytes / Opaque / UnpackedValues / Table / Ob
 可标注：**参数 / 返回值 / 字段 / 属性 / 类型（class、struct）**。
 **不可**标在方法上；**不可**标在仍含未绑定泛型形参的槽位。
 
-## 常用 `TsMarshalType`
+## 常用 `JsMarshalType`
 
 | 值 | 适用（摘要） | 用途 |
 |----|--------------|------|
@@ -37,7 +37,7 @@ description: 覆盖默认 Marshal；Bytes / Opaque / UnpackedValues / Table / Ob
 ### Bytes
 
 ```csharp
-public void Send([TsMarshalAs(TsMarshalType.Bytes)] byte[] payload) { }
+public void Send([JsMarshalAs(JsMarshalType.Bytes)] byte[] payload) { }
 ```
 
 ```javascript
@@ -49,17 +49,17 @@ host.Send("\0\1\2\3");   // JS string，原始字节语义
 形参占用 **N 个** JS 实参槽（N = `Members` 长度），热路径常用：
 
 ```csharp
-using ZTS;
+using ZenTS;
 
 public struct Vec2 { public float X, Y; }
 
 public class Mover
 {
     public void Move(
-        [TsMarshalAs(TsMarshalType.UnpackedValues, Members = new[] { "X", "Y" })]
+        [JsMarshalAs(JsMarshalType.UnpackedValues, Members = new[] { "X", "Y" })]
         Vec2 delta) { /* ... */ }
 
-    [return: TsMarshalAs(TsMarshalType.UnpackedValues, Members = new[] { "X", "Y" })]
+    [return: JsMarshalAs(JsMarshalType.UnpackedValues, Members = new[] { "X", "Y" })]
     public Vec2 Origin() => new Vec2 { X = 0, Y = 0 };
 }
 ```
@@ -74,7 +74,7 @@ const pair = m.Origin();    // C#→JS：长度 N 的 Array（或 bridge 约定�
 类型级标注：
 
 ```csharp
-[TsMarshalAs(TsMarshalType.UnpackedValues, Members = new[] { "x", "y", "z" })]
+[JsMarshalAs(JsMarshalType.UnpackedValues, Members = new[] { "x", "y", "z" })]
 public struct Vector3 { public float x, y, z; }
 ```
 
@@ -84,11 +84,11 @@ public struct Vector3 { public float x, y, z; }
 
 ```csharp
 public void Submit(
-    [TsMarshalAs(TsMarshalType.Table, Members = new[] { "Id", "X", "Y", "Tag?" })]
+    [JsMarshalAs(JsMarshalType.Table, Members = new[] { "Id", "X", "Y", "Tag?" })]
     Packet p) { }
 
 public void TryPlace(
-    [TsMarshalAs(TsMarshalType.Table, Members = new[] { "X", "Y" })]
+    [JsMarshalAs(JsMarshalType.Table, Members = new[] { "X", "Y" })]
     Vector2? pos) { }
 ```
 
@@ -102,13 +102,13 @@ host.TryPlace(null);                    // Nullable 无值
 
 ```csharp
 // by-val 强制 Opaque（C#→JS）；ref/out/in 无需再标
-public void PushPos([TsMarshalAs(TsMarshalType.OpaqueValue)] Vector3 p) { }
+public void PushPos([JsMarshalAs(JsMarshalType.OpaqueValue)] Vector3 p) { }
 
 public void HandleHuge(
-    [TsMarshalAs(TsMarshalType.Object)] string payload) { }
+    [JsMarshalAs(JsMarshalType.Object)] string payload) { }
 ```
 
-Opaque 用 `zts.get_opaquevalue` / `set_opaquevalue`；**不可**跨帧保存。`Object` on `string` 走 ByObj，避免生成巨大 JS string（仍会产生 userdata GC）。
+Opaque 用 `zents.get_opaquevalue` / `set_opaquevalue`；**不可**跨帧保存。`Object` on `string` 走 ByObj，避免生成巨大 JS string（仍会产生 userdata GC）。
 
 ### params 陷阱
 
@@ -120,7 +120,7 @@ Opaque 用 `zts.get_opaquevalue` / `set_opaquevalue`；**不可**跨帧保存。
 
 非法类型/方向 → 回退 `Default` + Editor 日志；缺 `Members` 等 → **绑定期 / Generate 失败**。
 
-Settings **`marshalAsXmlPaths`**；根元素 **`ZTSMarshalAs`**。Mono 运行时解析；Il2Cpp 在 **Generate** 写入表，**Player 不读 XML**。别名走独立 `tsAliasXmlPaths`。完整 schema 见 [规范 §9](/docs/spec/marshal/02-MARSHAL-AS/)。
+Settings **`marshalAsXmlPaths`**；根元素 **`ZenTSMarshalAs`**。Mono 运行时解析；Il2Cpp 在 **Generate** 写入表，**Player 不读 XML**。别名走独立 `jsAliasXmlPaths`。完整 schema 见 [规范 §9](/docs/spec/marshal/02-MARSHAL-AS/)。
 
 ## 相关文档
 

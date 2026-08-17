@@ -3,14 +3,14 @@ sidebar_position: 12
 title: "Class / Interface Marshal"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\06-CLASS.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\06-CLASS.md`）
 :::
 
 
 # Class / Interface Marshal
 
 > **规范性：** 引用类型（`class`、`interface`、`string`、数组实例、delegate 实例等）在 JavaScript 与 C# 之间的默认 Marshal 规则。
-> **相关：** 类型对象与成员 → [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md)；`ref`/`out`/`in` → [03-BYREF.md](./03-BYREF.md)；`[TsMarshalAs]` → [02-MARSHAL-AS.md](./02-MARSHAL-AS.md)；`zts.cast` → [../05-LIB.md](../05-LIB.md)。
+> **相关：** 类型对象与成员 → [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md)；`ref`/`out`/`in` → [03-BYREF.md](./03-BYREF.md)；`[JsMarshalAs]` → [02-MARSHAL-AS.md](./02-MARSHAL-AS.md)；`zents.cast` → [../05-LIB.md](../05-LIB.md)。
 
 **平台原则：** Mono 与 Il2Cpp **JS 可见语义一致**；class 实例默认 **ObjectRegistry 槽位 + GC root**（Il2Cpp：`Il2CppObject*`）。
 
@@ -44,7 +44,7 @@ ByObj exotic 为 QuickJS **exotic object** + **IEO 三表**；与 OpaqueValue、
 1. **C# → JS**：按 **声明类型** 选 IEO；**不**因运行时类型改挂或改走特殊 Marshal。
 2. **虚方法**：查找用声明类型 `MethodInfo`；调用对真实 `this` **虚派发**。
 3. **非虚 / `new` 隐藏**：走声明类型槽位。
-4. **Downcast**：仅 `zts.cast(obj, targetType)`；返回 **新 exotic**（同 identity、新门面）。
+4. **Downcast**：仅 `zents.cast(obj, targetType)`；返回 **新 exotic**（同 identity、新门面）。
 5. **缓存**：键 **`(identity, viewType)`**；`ObjectRegistry` 登记为 **GC root**（[../10-LIFETIME.md](../10-LIFETIME.md)）。
 
 ### 2.2 示例
@@ -55,7 +55,7 @@ Base CreateChild() => new Child();
 
 ```javascript
 const o = ObjectFactory.CreateChild();  // 门面 Base
-const c = zts.cast(o, Child);             // 门面 Child（须 IsAssignableFrom）
+const c = zents.cast(o, Child);             // 门面 Child（须 IsAssignableFrom）
 ```
 
 ### 2.3 `object` 形参
@@ -82,7 +82,7 @@ const c = zts.cast(o, Child);             // 门面 Child（须 IsAssignableFrom
 |----|------|
 | 默认 | **ByObj exotic**；门面 = **接口类型** |
 | `null` | ↔ **`null`** |
-| `[TsMarshalAs]` | `Object`、`OpaqueValue`（C#→JS） |
+| `[JsMarshalAs]` | `Object`、`OpaqueValue`（C#→JS） |
 | 成员 | 仅接口 + 继承接口可见成员 |
 
 ---
@@ -125,9 +125,9 @@ CS.Demo.Append(sb, "!");   // 共享引用
 |----------|---------|---------|
 | **`string`** | JS **string** | JS **string** 或 **`null`** |
 | **`object`**（运行时 string） | Object exotic | object Pop |
-| **`[TsMarshalAs(Object)]`** | ByObj exotic（托管 String 对象） | exotic 路径 |
+| **`[JsMarshalAs(Object)]`** | ByObj exotic（托管 String 对象） | exotic 路径 |
 
-`[TsMarshalAs(Bytes)]` 用于 **`byte[]`**，不是 `System.String`。
+`[JsMarshalAs(Bytes)]` 用于 **`byte[]`**，不是 `System.String`。
 
 ---
 
@@ -145,7 +145,7 @@ fn(1);                     // ❌ 提取的函数不绑定 this；throw 或未�
 
 ## 8. Mono / Il2Cpp 一致性
 
-Push/Pop、`(identity, viewType)`、`zts.cast`、C#→JS byref Opaque、错误消息（`zts:` 前缀）— **须一致**。
+Push/Pop、`(identity, viewType)`、`zents.cast`、C#→JS byref Opaque、错误消息（`zents:` 前缀）— **须一致**。
 
 ---
 

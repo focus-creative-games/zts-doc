@@ -1,31 +1,31 @@
 ---
 sidebar_position: 2
 title: Il2Cpp 实现
-description: zts-runtime C++ 路径笔记。
+description: zents-runtime C++ 路径笔记。
 ---
 
 # Il2Cpp 实现
 
-> **包内镜像：** `Packages/com.code-philosophy.zts/ZTS~/zts-runtime`（Install → `Local…/libil2cpp/zts`）
-> **开发编辑参考：** 导出工程 `Build-Win64/.../libil2cpp/zts`（改完再 sync 回包；路径以团队仓库为准）
-> **托管壳：** `ZTS.Il2Cpp` / `TsIl2CppAppDomain`（薄 InternalCall）
+> **包内镜像：** `Packages/com.code-philosophy.zen-ts/ZenTS~/zents-runtime`（Install → `Local…/libil2cpp/zents`）
+> **开发编辑参考：** 导出工程 `Build-Win64/.../libil2cpp/zents`（改完再 sync 回包；路径以团队仓库为准）
+> **托管壳：** `ZenTS.Il2Cpp` / `JsIl2CppAppDomain`（薄 InternalCall）
 > **JS 可见语义：** [spec](/docs/spec/00-OVERVIEW/) — 本文只描述 C++ 模块划分、Generate / ReducedType、初始化顺序。
 
 ---
 
 ## 1. 模块图（高阶）
 
-Player 热路径在 **`zts-runtime`**（运行时目录名 **`zts`**）。与 Mono `Runtime/Mono/` 按职责对照：
+Player 热路径在 **`zents-runtime`**（运行时目录名 **`zents`**）。与 Mono `Runtime/Mono/` 按职责对照：
 
 ```
-zts/   （← ZTS~/zts-runtime）
-├── lvm/         宿主生命周期、JS 状态、ZTSLib、InternalCall、Loader
+zents/   （← ZenTS~/zents-runtime）
+├── lvm/         宿主生命周期、JS 状态、ZenTSLib、InternalCall、Loader
 ├── mt/          类型注册、成员索引（Dispatch* + MetaBinding / TypeRegistry）
 ├── marshal/     Push/Pop、Registry、MarshalMeta、Overload 解析
 ├── bridge/      Method / Property / Field / Delegate 调用体
-├── generated/   构建期 Codegen 产物（stub 表、BuiltinScripts.inc、ZTSConf.inc）
+├── generated/   构建期 Codegen 产物（stub 表、BuiltinScripts.inc、ZenTSConf.inc）
 ├── utils/       横切：元数据、异常、栈守卫、分配器
-└── ZTSCommon.*  公共头、Compatible shim、与 QuickJS / Il2Cpp ABI
+└── ZenTSCommon.*  公共头、Compatible shim、与 QuickJS / Il2Cpp ABI
 ```
 
 **依赖方向（硬约束，与 ZLua 同构）：**
@@ -34,9 +34,9 @@ zts/   （← ZTS~/zts-runtime）
 - `bridge/` 可依赖 `marshal/` 与 `generated/`
 - `generated/` 仅被 `lvm/`、`bridge/` 等引用；不参与随意运行时分支
 
-QuickJS 源码在 `libil2cpp/quickjs`（Install 自 `ZTS~/quickjs-il2cpp`）；与 `zts` **静态编进**同一 native 产物。见 [11-MULTI-VERSION](/docs/spec/11-MULTI-VERSION/)、[build/01-QUICKJS](/docs/spec/build/01-QUICKJS/)。
+QuickJS 源码在 `libil2cpp/quickjs`（Install 自 `ZenTS~/quickjs-il2cpp`）；与 `zents` **静态编进**同一 native 产物。见 [11-MULTI-VERSION](/docs/spec/11-MULTI-VERSION/)、[build/01-QUICKJS](/docs/spec/build/01-QUICKJS/)。
 
-具体 `.cpp` 文件名以包内树为准；上表只保证 **角色** 稳定。`ZTSLib` 注册点见 [05-LIB](/docs/spec/05-LIB/)（`lvm/ZTSLib.cpp`）。
+具体 `.cpp` 文件名以包内树为准；上表只保证 **角色** 稳定。`ZenTSLib` 注册点见 [05-LIB](/docs/spec/05-LIB/)（`lvm/ZenTSLib.cpp`）。
 
 ---
 
@@ -50,7 +50,7 @@ Il2Cpp **不能**在 Player 上 Expression Emit。构建期扫描绑定集合，
 | Property / Field bridge | getter/setter、字段 offset + `methodPointer` 快路径 |
 | DelegateBridge stub | Delegate ↔ JS function；**C#→JS `GetFunction`** 亦经 Delegate 桥 |
 | MarshalAs / Alias / Extension 表 | 预编译 XML 与 Attribute 一并 Generate；**Player 不读 XML** |
-| `BuiltinScripts.inc` | 嵌入 `ztslib.js` 等 |
+| `BuiltinScripts.inc` | 嵌入 `zentslib.js` 等 |
 
 | 概念 | 说明 |
 |------|------|
@@ -66,7 +66,7 @@ Il2Cpp **不能**在 Player 上 Expression Emit。构建期扫描绑定集合，
 
 ### 3.1 AppDomain 级（进程 / 域）
 
-托管 `TsIl2CppAppDomain.Initialize` → native（概念顺序）：
+托管 `JsIl2CppAppDomain.Initialize` → native（概念顺序）：
 
 | 步骤 | 职责 |
 |------|------|
@@ -76,7 +76,7 @@ Il2Cpp **不能**在 Player 上 Expression Emit。构建期扫描绑定集合，
 | 4 | Loader 根 / 搜索路径（若有） |
 | 5 | **JS 状态级 Initialize**（下节） |
 | 6 | 安装托管 `moduleLoader` delegate |
-| 7 | 注册 **`TsFramePump`** |
+| 7 | 注册 **`JsFramePump`** |
 
 进程级 Bridge / XML 生成表 / InternalCall 在 **`Reset` 时保留**。
 
@@ -85,7 +85,7 @@ Il2Cpp **不能**在 Player 上 Expression Emit。构建期扫描绑定集合，
 | 步骤 | 职责 |
 |------|------|
 | 1 | 创建 `JSRuntime` + 主 `JSContext`（**单上下文**） |
-| 2 | 注册 globals / 嵌入脚本；`ZTSLib::RegisterGlobals` + `ztslib.js` |
+| 2 | 注册 globals / 嵌入脚本；`ZenTSLib::RegisterGlobals` + `zentslib.js` |
 | 3 | `ObjectRegistry` / Struct registry / MetaTable 缓存 |
 | 4 | 安装 ES module hooks（**先** `csharp:`，再原生 C 模块，再宿主 loader） |
 | 5 | `AssemblyRegistry` / `CSharp` 根 |
@@ -101,7 +101,7 @@ Il2Cpp **不能**在 Player 上 Expression Emit。构建期扫描绑定集合，
 
 ### `lvm/`
 
-宿主入口、`JS` 生命周期、pending ref 队列、`ZTSLib`（`zts.*` native）、InternalCall、模块 loader 与托管 delegate 对接。
+宿主入口、`JS` 生命周期、pending ref 队列、`ZenTSLib`（`zents.*` native）、InternalCall、模块 loader 与托管 delegate 对接。
 
 ### `mt/`
 
@@ -117,7 +117,7 @@ Il2Cpp **不能**在 Player 上 Expression Emit。构建期扫描绑定集合，
 
 ### `generated/`
 
-**构建产出，勿手改。** stub 头、`BuiltinScripts.inc`、`ZTSConf.inc`（Install/Generate 宏）等。
+**构建产出，勿手改。** stub 头、`BuiltinScripts.inc`、`ZenTSConf.inc`（Install/Generate 宏）等。
 
 ### `utils/`
 
@@ -133,7 +133,7 @@ Il2Cpp **不能**在 Player 上 Expression Emit。构建期扫描绑定集合，
 | JS→C# | Codegen stub + **ReducedType 复用** | Emit 每成员 |
 | C#→JS | `GetFunction` + Delegate 桥 | 同左 |
 | Event | `add_*` / `remove_*` 普通方法 | 同左 |
-| 源码权威 | `zts-runtime` / 导出工程 `libil2cpp/zts` | `Runtime/Mono/` |
+| 源码权威 | `zents-runtime` / 导出工程 `libil2cpp/zents` | `Runtime/Mono/` |
 
 对照 [MONO](/docs/impl/MONO/)。
 

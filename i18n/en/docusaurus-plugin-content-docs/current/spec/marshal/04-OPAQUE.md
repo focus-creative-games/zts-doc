@@ -3,15 +3,15 @@ sidebar_position: 10
 title: "OpaqueValue（临时不透明参数）"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\04-OPAQUE.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\04-OPAQUE.md`）
 :::
 
 
 # OpaqueValue（临时不透明参数）
 
-> **规范性：** C# 调用 JavaScript 时，将形参/局部在 C# 调用栈上的存储地址暴露给脚本的临时令牌；以及 `[TsMarshalAs(OpaqueValue)]` 强制路径。
+> **规范性：** C# 调用 JavaScript 时，将形参/局部在 C# 调用栈上的存储地址暴露给脚本的临时令牌；以及 `[JsMarshalAs(OpaqueValue)]` 强制路径。
 > **byref 默认（C#→JS）：** `ref`/`in`/`out` **默认** OpaqueValue，见 [03-BYREF.md §2](./03-BYREF.md)。
-> **API：** `zts.get_opaquevalue` / `zts.set_opaquevalue`（native 内部 hook），签名见 [../05-LIB.md](../05-LIB.md)。
+> **API：** `zents.get_opaquevalue` / `zents.set_opaquevalue`（native 内部 hook），签名见 [../05-LIB.md](../05-LIB.md)。
 
 ---
 
@@ -30,7 +30,7 @@ OpaqueValue 是 **C# 调用 JavaScript** 时，将 **形参/局部在 C# 调用�
 | 成员访问 | **不可** `.` / `[` 访问 CLR 成员 |
 | 与 ByObj/ByVal exotic | **不同**：不注册 `ObjectRegistry` 长期槽位（仅调用帧 scope） |
 
-脚本读写须经 `zts.get_opaquevalue` / `zts.set_opaquevalue`（§5）。
+脚本读写须经 `zents.get_opaquevalue` / `zents.set_opaquevalue`（§5）。
 
 ---
 
@@ -61,12 +61,12 @@ Lua 回调中的 `ref int` **不是** `number`，而是 opaque handle；再传�
 | 有效域 | **仅** 产生它的那次 **C# 调用 JS** 尚未返回（`OpaqueParameterScope` / generation） |
 | 回调内 | 可 `get`/`set`；可按 §6 传回 C# |
 | **禁止** | 写入全局、闭包捕获后在 **异步** / **后续 JS_Call** / **C# 已返回** 后使用 |
-| 失效后 | `get`/`set`/Pop → **`throw Error('zts: invalid opaque parameter handle')`** |
+| 失效后 | `get`/`set`/Pop → **`throw Error('zents: invalid opaque parameter handle')`** |
 
 ```javascript
 function OnTick(h) {
-    const v = zts.get_opaquevalue(h);
-    zts.set_opaquevalue(h, v + 1);
+    const v = zents.get_opaquevalue(h);
+    zents.set_opaquevalue(h, v + 1);
     CS.Demo.UseInt(v);              // 简单类型须先解值
 }
 
@@ -76,7 +76,7 @@ function OnPoint(h) {
 // C# 返回后仍持有 h → 下次使用 throw
 ```
 
-**长生命周期：** `zts.to_user_data(opaque)`（**拷贝** 到 ByVal exotic）或默认 StructUserData 路径，见 [05-STRUCT.md](./05-STRUCT.md)。
+**长生命周期：** `zents.to_user_data(opaque)`（**拷贝** 到 ByVal exotic）或默认 StructUserData 路径，见 [05-STRUCT.md](./05-STRUCT.md)。
 
 异常路径：`GetFunction` invoke 须维护 **OpaqueParameterScope**，确保异常时 handle 同样失效（[../10-LIFETIME.md](../10-LIFETIME.md)）。
 
@@ -84,14 +84,14 @@ function OnPoint(h) {
 
 ## 5. 读写 API
 
-### 5.1 `zts.get_opaquevalue(opaque_handle) → value`
+### 5.1 `zents.get_opaquevalue(opaque_handle) → value`
 
 | handle 指向 | 行为 |
 |-------------|------|
 | 非 byref | 对槽值走 [01-OVERVIEW.md](./01-OVERVIEW.md) **默认 Push 规则** 转为 JS 值 |
 | **`ref`/`in`/`out T`** | **先解引用**，再对 **T** 默认 Push（例：`ref int` → **number**） |
 
-### 5.2 `zts.set_opaquevalue(opaque_handle, new_value)`
+### 5.2 `zents.set_opaquevalue(opaque_handle, new_value)`
 
 | handle 指向 | 行为 |
 |-------------|------|
@@ -100,7 +100,7 @@ function OnPoint(h) {
 
 ```javascript
 function OnRefInt(h) {
-    zts.set_opaquevalue(h, zts.get_opaquevalue(h) + 10);
+    zents.set_opaquevalue(h, zents.get_opaquevalue(h) + 10);
 }
 ```
 
@@ -116,7 +116,7 @@ handle **仍有效** 的同步链内：
 |--------------------------|------------------------|----------|
 | **托管引用类型**（class、string、delegate、数组、boxed 等） | **是** | 可 **原样** 传入 handle |
 | **`struct`（普通值类型）** | **是** | 同上 |
-| **简单类型**（bool、整型、float、enum、`IntPtr` 等） | **否** | 须 `zts.get_opaquevalue(h)` 后再传 |
+| **简单类型**（bool、整型、float、enum、`IntPtr` 等） | **否** | 须 `zents.get_opaquevalue(h)` 后再传 |
 | **`ref`/`in`/`out A`** | **一律** 先识别 Opaque；兼容则 **直传地址**（含 `ref int`） | 见 [03-BYREF.md](./03-BYREF.md) |
 
 ```javascript
@@ -125,7 +125,7 @@ function OnOpaquePoint(h) {
 }
 
 function OnOpaqueInt(h) {
-    CS.Demo.AcceptInt(zts.get_opaquevalue(h));      // OK
+    CS.Demo.AcceptInt(zents.get_opaquevalue(h));      // OK
     // CS.Demo.AcceptInt(h);                        // 失败
 }
 ```
@@ -158,7 +158,7 @@ struct 默认 C#→JS by-val 在同步链内亦可能为 OpaqueValue。须 `get`
 | 主题 | 文档 |
 |------|------|
 | JS→C# byref | [03-BYREF.md](./03-BYREF.md) |
-| `[TsMarshalAs(OpaqueValue)]` | [02-MARSHAL-AS.md](./02-MARSHAL-AS.md) |
+| `[JsMarshalAs(OpaqueValue)]` | [02-MARSHAL-AS.md](./02-MARSHAL-AS.md) |
 | struct | [05-STRUCT.md](./05-STRUCT.md) |
-| `zts.*` | [../05-LIB.md](../05-LIB.md) |
+| `zents.*` | [../05-LIB.md](../05-LIB.md) |
 | 帧泵 / scope | [../10-LIFETIME.md](../10-LIFETIME.md) |

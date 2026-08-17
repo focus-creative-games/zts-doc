@@ -7,10 +7,10 @@ description: "C# 与 JavaScript 之间的默认参数 Marshal 规则。"
 # Marshal 概览
 
 :::tip 谁该读本文
-**需要理解参数如何在 C# 与 JS 间转换、何时用 `[TsMarshalAs]` / Opaque 的开发者。** `ref/out` 实操见 [指南](/docs/guides/ref-out-in/)；属性覆盖见 [TsMarshalAs](/docs/guides/ts-marshal-as/)。
+**需要理解参数如何在 C# 与 JS 间转换、何时用 `[JsMarshalAs]` / Opaque 的开发者。** `ref/out` 实操见 [指南](/docs/guides/ref-out-in/)；属性覆盖见 [JsMarshalAs](/docs/guides/js-marshal-as/)。
 :::
 
-ZTS 在 Mono 与 Il2Cpp 上 **JS 可见 Marshal 语义一致**；Il2Cpp 侧重零 GC 与生成代码快速路径。设计与 ZLua Marshal 同构，语法面换成 JS（`null` / `undefined` 有明确边界）。
+ZenTS 在 Mono 与 Il2Cpp 上 **JS 可见 Marshal 语义一致**；Il2Cpp 侧重零 GC 与生成代码快速路径。设计与 ZLua Marshal 同构，语法面换成 JS（`null` / `undefined` 有明确边界）。
 
 ## 双向调用路径
 
@@ -30,7 +30,7 @@ flowchart TB
         P2 --> J4[JS 返回值]
     end
 
-    MA["[TsMarshalAs]"] -.->|覆盖| P1
+    MA["[JsMarshalAs]"] -.->|覆盖| P1
     MA -.-> Pop2
 ```
 
@@ -59,9 +59,9 @@ QuickJS 同时存在 `undefined` 与 `null`。**禁止**在规范层把二者无
 
 | JS → C# 场景 | 行为 |
 |--------------|------|
-| 必选引用形参传 `undefined` | **`throw Error('zts: argument missing: …')`** — 须显式 `null` |
+| 必选引用形参传 `undefined` | **`throw Error('zents: argument missing: …')`** — 须显式 `null` |
 | `Nullable<T>` 收 `undefined` | 视为无值 |
-| 读 C# 成员 miss | **`throw Error('zts: member not found: …')`** — **不是** `undefined` |
+| 读 C# 成员 miss | **`throw Error('zents: member not found: …')`** — **不是** `undefined` |
 
 ## ref / out / in（JS → C#）
 
@@ -76,15 +76,15 @@ JS 侧 **不区分** ref/out/in 关键字，统一按 byref 槽语义处理：
 
 → [ref / out / in 指南](/docs/guides/ref-out-in/)
 
-## `[TsMarshalAs]` 覆盖
+## `[JsMarshalAs]` 覆盖
 
-| TsMarshalType（概念） | 典型用途 |
+| JsMarshalType（概念） | 典型用途 |
 |----------------------|----------|
 | **UserData / 强制 boxed** | 基元、enum、string 走对象形态 |
 | **Bytes** | `byte[]` ↔ JS 字符串 / 字节视图（以实现为准） |
 | **OpaqueLightUserData** | C#→JS 栈上 struct 临时句柄 |
 
-合法组合与作用位置见 [02-MARSHAL-AS](/docs/spec/marshal/02-MARSHAL-AS/) · [TsMarshalAs 指南](/docs/guides/ts-marshal-as/)。
+合法组合与作用位置见 [02-MARSHAL-AS](/docs/spec/marshal/02-MARSHAL-AS/) · [JsMarshalAs 指南](/docs/guides/js-marshal-as/)。
 
 ## 少 GC 策略（心智）
 

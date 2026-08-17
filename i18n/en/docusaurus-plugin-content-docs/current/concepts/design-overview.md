@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: 设计概览
-description: ZTS 的核心设计目标与 GetFunction 模型。
+description: ZenTS 的核心设计目标与 GetFunction 模型。
 ---
 
 # 设计概览
@@ -10,15 +10,15 @@ description: ZTS 的核心设计目标与 GetFunction 模型。
 **选型者、新接入开发者、需要理解「为什么这样设计」的读者。** 日常 API 用法请直接看 [使用指南](/docs/guides/install/)；实现细节见 [规范文档](/docs/spec/00-OVERVIEW/)。
 :::
 
-ZTS 把 JavaScript 当作另一种 **Native**：类比 P/Invoke，用声明式 API 统一双向互操作；Il2Cpp 侧生成 **C++ stub**，**不是** 海量托管 Wrap。语义与 [ZLua](https://doc.zlua.cn) 对齐，引擎与语法面换成 **QuickJS / TypeScript·JavaScript**。
+ZenTS 把 JavaScript 当作另一种 **Native**：类比 P/Invoke，用声明式 API 统一双向互操作；Il2Cpp 侧生成 **C++ stub**，**不是** 海量托管 Wrap。语义与 [ZLua](https://doc.zlua.cn) 对齐，引擎与语法面换成 **QuickJS / TypeScript·JavaScript**。
 
-## P/Invoke 与 ZTS 对照
+## P/Invoke 与 ZenTS 对照
 
-| C# 互操作 | 职责 | ZTS 对应 |
+| C# 互操作 | 职责 | ZenTS 对应 |
 |-----------|------|-----------|
 | **P/Invoke** | C# 调用 native 函数 | **`GetFunction<T>`** — C# 调用 JS（ES module 导出） |
 | **MonoPInvokeCallback** | native 回调 C# | 委托 / 回调桥（见 [FUNCTION](/docs/spec/marshal/09-FUNCTION/)） |
-| **MarshalAs** | 覆盖默认 Marshal | **`[TsMarshalAs]`** — C# ↔ JS Marshal 覆盖 |
+| **MarshalAs** | 覆盖默认 Marshal | **`[JsMarshalAs]`** — C# ↔ JS Marshal 覆盖 |
 
 ```text
 flowchart LR
@@ -50,9 +50,9 @@ flowchart LR
 
 | 原则 | 说明 |
 |------|------|
-| **统一双向调用** | C#→JS：`TsAppDomain.GetFunction<T>`；JS→C#：`CSharp` 懒注册或 `import from "csharp:…"`，语法贴近 C# |
+| **统一双向调用** | C#→JS：`JsAppDomain.GetFunction<T>`；JS→C#：`CSharp` 懒注册或 `import from "csharp:…"`，语法贴近 C# |
 | **自动生成（JS→C#）** | Editor Emit / Il2Cpp Generate C++ stub；C#→JS 无 per-call codegen |
-| **深度集成** | `TsAppDomain.Initialize` 一次完成 CLR + QuickJS（`JSRuntime` + 主 `JSContext`）+ `zts` 库；热更清空走 `Reset` |
+| **深度集成** | `JsAppDomain.Initialize` 一次完成 CLR + QuickJS（`JSRuntime` + 主 `JSContext`）+ `zents` 库；热更清空走 `Reset` |
 | **C++ 直桥** | Player 字段 offset 直读、方法经 `methodPointer`，无海量 C# Wrap |
 | **零 Wrapper 膨胀** | 相同签名共享桥接函数，而非每成员一个 Wrap |
 | **strict miss** | 未注册成员 **`throw Error`**，不回退反射、不返回 `undefined` |
@@ -66,7 +66,7 @@ flowchart TB
     C --> D[Expression Emit MethodBridge]
     B -->|Il2Cpp Player 构建| E[扫描类型绑定 + ReducedType]
     E --> F[生成 C++ MethodBridge / DelegateBridge 模板]
-    F --> G[libil2cpp/zts 链接进 Player]
+    F --> G[libil2cpp/zents 链接进 Player]
     D --> H[Mono 运行时: 反射 + Expression 编译缓存]
     G --> I[Il2Cpp 运行时: C++ 直调 QuickJS API]
 ```
@@ -80,8 +80,8 @@ flowchart TB
 ## Host API 一瞥
 
 ```csharp
-TsAppDomain.Initialize(moduleLoader);
-var onTick = TsAppDomain.GetFunction<Action<float>>("game/logic", "onTick");
+JsAppDomain.Initialize(moduleLoader);
+var onTick = JsAppDomain.GetFunction<Action<float>>("game/logic", "onTick");
 // onTick(deltaTime);
 ```
 
@@ -103,7 +103,7 @@ const Demo2 = CSharp["Assembly-CSharp"].Demo;
 
 ## 与 Puerts / 自管 QuickJS 的路径差异（摘要）
 
-| 维度 | Puerts 常见路径 | 自管 QuickJS | ZTS |
+| 维度 | Puerts 常见路径 | 自管 QuickJS | ZenTS |
 |------|-----------------|--------------|-----|
 | 类型暴露 | 生成 / 导出配置 | 手写绑定 | `CSharp` + `csharp:` + Exotic 三表 |
 | C#→JS | 视方案（常见 DoString / 路径拼装） | 手写 | `GetFunction<T>` + `Invoke` |

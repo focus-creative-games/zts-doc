@@ -1,31 +1,31 @@
 ---
 sidebar_position: 3
 title: Attributes
-description: TsMarshalAs / TsAlias / TsExtension。
+description: JsMarshalAs / JsAlias / JsExtension。
 ---
 
 # Attributes
 
-宿主与绑定相关的三个特性均定义于 **`ZTS.Common`**。完整语义见对应规范；本页为签名、合法值与链接速查。
+宿主与绑定相关的三个特性均定义于 **`ZenTS.Common`**。完整语义见对应规范；本页为签名、合法值与链接速查。
 
 | 特性 | 用途 | 规范 |
 |------|------|------|
-| `[TsMarshalAs]` | 覆盖默认 Marshal | [02-MARSHAL-AS](/docs/spec/marshal/02-MARSHAL-AS/) |
-| `[TsAlias]` | 方法 JS **最终名**（替换默认名） | [04-METHOD-OVERLOAD](/docs/spec/04-METHOD-OVERLOAD/) §5 |
-| `[TsExtension]` | 在被扩展类型上声明扩展类列表 | [13-EXTENSION-METHODS](/docs/spec/13-EXTENSION-METHODS/) |
+| `[JsMarshalAs]` | 覆盖默认 Marshal | [02-MARSHAL-AS](/docs/spec/marshal/02-MARSHAL-AS/) |
+| `[JsAlias]` | 方法 JS **最终名**（替换默认名） | [04-METHOD-OVERLOAD](/docs/spec/04-METHOD-OVERLOAD/) §5 |
+| `[JsExtension]` | 在被扩展类型上声明扩展类列表 | [13-EXTENSION-METHODS](/docs/spec/13-EXTENSION-METHODS/) |
 
 ---
 
-## `[TsMarshalAs]`
+## `[JsMarshalAs]`
 
 覆盖 C# ↔ JS 双向调用时的默认 Marshal。可标于 **参数、返回值、字段、属性**，以及 **类型**（`class` / `struct` 上的类型级默认）。
 
 **禁止**标注在 **方法** 上（绑定期配置异常或 Mono 告警回退）。
 
 ```csharp
-using ZTS;
+using ZenTS;
 
-public enum TsMarshalType
+public enum JsMarshalType
 {
     Default,
     Object,           // 强制 ByObj / ByVal exotic（对 string：默认 JS string → 托管 String exotic）
@@ -39,11 +39,11 @@ public enum TsMarshalType
     AttributeTargets.Parameter | AttributeTargets.ReturnValue |
     AttributeTargets.Field | AttributeTargets.Property |
     AttributeTargets.Class | AttributeTargets.Struct)]
-public sealed class TsMarshalAsAttribute : Attribute
+public sealed class JsMarshalAsAttribute : Attribute
 {
-    public TsMarshalType MarshalType { get; }
+    public JsMarshalType JsMarshalType { get; }
     public string[] Members { get; set; }  // Table / UnpackedValues 必填
-    public TsMarshalAsAttribute(TsMarshalType marshalType = TsMarshalType.Default);
+    public JsMarshalAsAttribute(JsMarshalType jsMarshalType = JsMarshalType.Default);
 }
 ```
 
@@ -67,25 +67,25 @@ public sealed class TsMarshalAsAttribute : Attribute
 
 **开放泛型位置禁止标注**（须已闭合）。预编译 DLL 可用独立 MarshalAs XML（与 Alias / Extension **分文件**）。
 
-指南：[TsMarshalAs](/docs/guides/ts-marshal-as/) · [少 GC Marshal](/docs/guides/zero-gc-marshal/) · [Marshal 概览](/docs/concepts/marshal-overview/)
+指南：[JsMarshalAs](/docs/guides/js-marshal-as/) · [少 GC Marshal](/docs/guides/zero-gc-marshal/) · [Marshal 概览](/docs/concepts/marshal-overview/)
 
 ---
 
-## `[TsAlias]`
+## `[JsAlias]`
 
 为方法指定 **唯一最终 JS 名**，**替换** `MethodInfo.Name`（**不**双挂）。允许与其它默认名 / 别名撞名 → 进入同一 overload 组；单候选则为 direct。
 
 ```csharp
-using ZTS;
+using ZenTS;
 
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-public sealed class TsAliasAttribute : Attribute
+public sealed class JsAliasAttribute : Attribute
 {
     public string Alias { get; }
-    public TsAliasAttribute(string alias);
+    public JsAliasAttribute(string alias);
 }
 
-[TsAlias("run_i32")]
+[JsAlias("run_i32")]
 public void Run(int value) { ... }
 ```
 
@@ -93,34 +93,34 @@ public void Run(int value) { ... }
 |----|------|
 | 目标 | 仅 **Method**；每方法最多一个别名 |
 | 继承 | **不**继承到子类重写 |
-| 优先级 | Attribute **>** XML（Settings **`tsAliasXmlPaths`**，根元素 **`TsAlias`**） |
+| 优先级 | Attribute **>** XML（Settings **`jsAliasXmlPaths`**，根元素 **`JsAlias`**） |
 | Player | Generate 写入静态表；**不**运行时读 XML |
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<TsAlias version="1">
+<JsAlias version="1">
   <Assembly name="Assembly-CSharp">
     <Type fullName="Demo">
       <Method name="Run" signature="(System.Int32)" alias="run_i32"/>
     </Type>
   </Assembly>
-</TsAlias>
+</JsAlias>
 ```
 
-指南：[TsAlias](/docs/guides/ts-alias/) · [重载](/docs/guides/overloads/)
+指南：[JsAlias](/docs/guides/js-alias/) · [重载](/docs/guides/overloads/)
 
 ---
 
-## `[TsExtension]`
+## `[JsExtension]`
 
 标在 **被扩展类型** 上，列出扩展类；Bind 时把匹配的 `public static` extension 注入该类型 **实例** method 表（`obj.ExtMethod(args)` 方法调用绑定 `this`）。
 
 **禁止**标在扩展类上再反查；**不做**全局扫描所有 `ExtensionAttribute`。
 
 ```csharp
-using ZTS;
+using ZenTS;
 
-[TsExtension(typeof(TransformExt), typeof(TransformTweenExt))]
+[JsExtension(typeof(TransformExt), typeof(TransformTweenExt))]
 public class MyBehaviour : MonoBehaviour { }
 ```
 
@@ -128,7 +128,7 @@ public class MyBehaviour : MonoBehaviour { }
 |----|------|
 | 目标 | **Type**；`AllowMultiple` 允许，多条取 **并集** |
 | 继承 | Bind 时 walk `BaseType` 链收集 |
-| XML | Settings **`tsExtensionXmlPaths`**，根元素 **`ZTSExtensions`**（与 Alias **分文件**） |
+| XML | Settings **`jsExtensionXmlPaths`**，根元素 **`JsExtensions`**（与 Alias **分文件**） |
 | 同名 | 与真实例方法 **合并竞争**（无「实例优先」） |
 | 开放泛型扩展 | **不支持** |
 
@@ -140,9 +140,9 @@ public class MyBehaviour : MonoBehaviour { }
 
 | 特性 | Mono (Editor) | Il2Cpp (Player) |
 |------|:-------------:|:---------------:|
-| `TsMarshalAs` | ✅（非法 → 日志回退） | ✅（Generate/XML 可硬失败） |
-| `TsAlias` | ✅ | ✅（Generate 静态表） |
-| `TsExtension` | ✅ | ✅（Generate 静态表） |
+| `JsMarshalAs` | ✅（非法 → 日志回退） | ✅（Generate/XML 可硬失败） |
+| `JsAlias` | ✅ | ✅（Generate 静态表） |
+| `JsExtension` | ✅ | ✅（Generate 静态表） |
 
 ## 相关文档
 

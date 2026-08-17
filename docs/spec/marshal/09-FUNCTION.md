@@ -3,7 +3,7 @@ sidebar_position: 15
 title: "Delegate / 函数 Marshal"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\09-FUNCTION.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\09-FUNCTION.md`）
 :::
 
 
@@ -94,7 +94,7 @@ PushDelegate(d):
 |----|------|
 | **多播** | 仅当整条 invocation list 可还原为 **单一** JS 源时走 function；否则 exotic |
 | **往返** | JS function → C# → 再 Push → **同一** function |
-| **`[TsMarshalAs(Object)]`** | **不** 覆盖分流 |
+| **`[JsMarshalAs(Object)]`** | **不** 覆盖分流 |
 | **`null`** | **`null`** |
 
 ### 3.2 Delegate exotic 调用
@@ -159,7 +159,7 @@ obj.RegisterCallback((v) => console.log(v));
 按每种 `Invoke` 签名生成 C++ 入口：`JS_Call` + marshal。
 
 - **`ref`/`out`/`in`（bridge C#→JS）**：默认 **OpaqueValue**
-- **`[TsMarshalAs]`** 非默认：与普通方法同一解析
+- **`[JsMarshalAs]`** 非默认：与普通方法同一解析
 - 未注册签名 → **throw** + Codegen 提示
 
 ### 4.4 Mono：Expression Emit
@@ -169,10 +169,10 @@ obj.RegisterCallback((v) => console.log(v));
 - **`ref`/`out`/`in`**：**支持**
 - **禁止** `DynamicMethod` + `Delegate.CreateDelegate`（Unity Mono SIGSEGV 风险）
 
-### 4.5 显式 `zts.to_delegate`
+### 4.5 显式 `zents.to_delegate`
 
 ```javascript
-const d = zts.to_delegate((a) => a, FuncIntIntType);
+const d = zents.to_delegate((a) => a, FuncIntIntType);
 obj.RegisterCallback(d);
 ```
 
@@ -206,7 +206,7 @@ obj.RegisterCallback(d);
 | JS function 无其它引用 | ref 仍保活直至 delegate 释放 |
 | 失效后调用 | **throw** |
 
-**帧泵：** `TsAppDomain.ProcessPendingRefReleases()`（`TsFramePump`）在主线程批量 `unref`（[../10-LIFETIME.md](../10-LIFETIME.md)）。
+**帧泵：** `JsAppDomain.ProcessPendingRefReleases()`（`JsFramePump`）在主线程批量 `unref`（[../10-LIFETIME.md](../10-LIFETIME.md)）。
 
 **C# delegate → JS（JS 源）：** Push function；**不** 新建 ref。
 

@@ -3,13 +3,13 @@ sidebar_position: 18
 title: "Exotic 布局"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`metatable\01-LAYOUT.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`metatable\01-LAYOUT.md`）
 :::
 
 
 # 01 — Exotic 布局
 
-本文档规定 ZTS 在 JavaScript 侧暴露的**类型对象**、**静态分派载体（STO）**与**实例分派载体（IEO）**的结构。所有内部槽键名与 `TsConsts.h`（或 `TsConsts.cs`）一致；JS 脚本通过成员访问、`typeof`、构造等 API 间接依赖这些布局，但不应依赖 native 实现细节（如 Dispatch 闭包、三表内存布局等——见 `impl/metatable/`）。
+本文档规定 ZenTS 在 JavaScript 侧暴露的**类型对象**、**静态分派载体（STO）**与**实例分派载体（IEO）**的结构。所有内部槽键名与 `JsConsts.h`（或 `JsConsts.cs`）一致；JS 脚本通过成员访问、`typeof`、构造等 API 间接依赖这些布局，但不应依赖 native 实现细节（如 Dispatch 闭包、三表内存布局等——见 `impl/metatable/`）。
 
 **关联文档：** 属性分派算法 → [02-INDEX.md](./02-INDEX.md)；注册期规则 → [03-BINDING.md](./03-BINDING.md)；特殊类型 → [04-SPECIAL-TYPES.md](./04-SPECIAL-TYPES.md)；类型解析与 `CSharp` 路径 → [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md)。
 
@@ -31,17 +31,17 @@ title: "Exotic 布局"
 
 ## 2. 类型对象 `T`
 
-类型对象是一张 **exotic object**，承载类型身份元数据，并作为静态成员访问的 `receiver`（静态 field getter 的 `obj` 参数为 `T`）。下列键来自 `TsConsts` 及绑定约定（脚本侧只读访问方式由实现定义，键名须稳定）：
+类型对象是一张 **exotic object**，承载类型身份元数据，并作为静态成员访问的 `receiver`（静态 field getter 的 `obj` 参数为 `T`）。下列键来自 `JsConsts` 及绑定约定（脚本侧只读访问方式由实现定义，键名须稳定）：
 
 | 键 / 槽 | 常量 | 说明 |
 |---------|------|------|
-| `__fullname` | `TsConsts::FullName` | JS 规范类型全名（含 namespace、`+` 嵌套分隔，与 CLR `Type.FullName` 对齐） |
-| `__klass` | `TsConsts::Klass` | 实现用：指向 native 类型描述（Il2Cpp 为 `Il2CppClass*` 句柄；Mono 为等价 type id） |
-| `__byvalInstanceProto` | `TsConsts::ByValInstanceProto` | struct 的 ByVal 实例分派原型；**仅 struct** 存在 |
-| `__byobjInstanceProto` | `TsConsts::ByObjInstanceProto` | ByObj 实例分派原型：class、struct boxed、enum boxed、数组、委托等 |
-| `__struct` | `TsConsts::Struct` | 仅 struct：`true` |
-| `__enum` | `TsConsts::Enum` | 仅 enum：`true` |
-| `__nullable` | `TsConsts::Nullable` | 仅 `Nullable<T>` 闭合类型：`true`；与 `__struct` / `__enum` **互斥** |
+| `__fullname` | `JsConsts::FullName` | JS 规范类型全名（含 namespace、`+` 嵌套分隔，与 CLR `Type.FullName` 对齐） |
+| `__klass` | `JsConsts::Klass` | 实现用：指向 native 类型描述（Il2Cpp 为 `Il2CppClass*` 句柄；Mono 为等价 type id） |
+| `__byvalInstanceProto` | `JsConsts::ByValInstanceProto` | struct 的 ByVal 实例分派原型；**仅 struct** 存在 |
+| `__byobjInstanceProto` | `JsConsts::ByObjInstanceProto` | ByObj 实例分派原型：class、struct boxed、enum boxed、数组、委托等 |
+| `__struct` | `JsConsts::Struct` | 仅 struct：`true` |
+| `__enum` | `JsConsts::Enum` | 仅 enum：`true` |
+| `__nullable` | `JsConsts::Nullable` | 仅 `Nullable<T>` 闭合类型：`true`；与 `__struct` / `__enum` **互斥** |
 
 类型族标记（`__struct` / `__enum` / `__nullable`）至多出现一个，供脚本与 API 区分构造入口与实例形态。
 
@@ -61,7 +61,7 @@ title: "Exotic 布局"
 STO（内部槽，挂于 T）
 ├─ [[Get]] / [[Set]]  → 静态成员 indexer（引用 static methodTable, fieldGetterTable, fieldSetterTable）
 ├─ [[Construct]]      → 实例构造 dispatch（class / struct；Nullable 见 §4；enum **无**）
-├─ [[Default]]        → 可选；**仅 struct** 的无参默认实例 callable（键名 TsConsts::Default，脚本见 `_default`）
+├─ [[Default]]        → 可选；**仅 struct** 的无参默认实例 callable（键名 JsConsts::Default，脚本见 `_default`）
 └─ toString           → 可选；默认返回类型 __fullname
 ```
 
@@ -75,14 +75,14 @@ Nullable 的 STO **仅** 含 **`[[Construct]]`**（构造 element 类型 `T` 的
 
 ## 4. 实例分派 IEO
 
-实例 exotic object 通过内部槽 `[[DispatchProto]]` 指向声明类型（或 view 类型）对应的 **IEO 分派原型**。布局如下（键名均来自 `TsConsts`）：
+实例 exotic object 通过内部槽 `[[DispatchProto]]` 指向声明类型（或 view 类型）对应的 **IEO 分派原型**。布局如下（键名均来自 `JsConsts`）：
 
 ```
 IEO（ByVal 或 ByObj 分派原型）
 ├─ [[Get]] / [[Set]]  → 实例 indexer（引用 instance methodTable, fieldGetterTable, fieldSetterTable）
 ├─ [[Finalize]]       → 释放 exotic object 生命周期跟踪（ByVal 非 blittable struct、ByObj 引用等）
 ├─ __type             → 指回类型对象 T（静实例互查）
-├─ __zts_ud_kind      → "byval" | "byobj"（TsConsts::UdKindByVal / UdKindByObj）
+├─ __zents_ud_kind      → "byval" | "byobj"（JsConsts::UdKindByVal / UdKindByObj）
 ├─ toString           → 可选（如 boxed struct / enum 走 Object.ToString）
 ├─ length             → 可选（**数组** szarray / mdarray，见 [04-SPECIAL-TYPES.md](./04-SPECIAL-TYPES.md)）
 └─ [[Call]]           → 可选（**仅委托** ByObj exotic object，见 [04-SPECIAL-TYPES.md](./04-SPECIAL-TYPES.md)）
@@ -91,17 +91,17 @@ IEO（ByVal 或 ByObj 分派原型）
 ### 4.1 ByVal 实例分派（`T.__byvalInstanceProto`）
 
 - 适用于 struct 的 **ByVal exotic object**（payload 内嵌于 `[[Payload]]` 槽）。
-- `__zts_ud_kind` 为 `"byval"`。
+- `__zents_ud_kind` 为 `"byval"`。
 - 实例 indexer 使用的三表与 ByObj 侧**成员名集合相同**，但 getter / setter / method bridge 按 ByVal 解析 `this`（指向 payload，不含 object header）。
 - blittable struct 可无 `[[Finalize]]`；含托管引用字段的 struct 须注册 finalize。
 
 ### 4.2 ByObj 实例分派（`T.__byobjInstanceProto`）
 
 - 适用于：class 实例、struct 的 boxed 实例、boxed enum、`System.Array` 派生数组、委托等。
-- `__zts_ud_kind` 为 `"byobj"`。
+- `__zents_ud_kind` 为 `"byobj"`。
 - indexer 按 ByObj 规则解析 `this`（`Il2CppObject*` / 等价 GCHandle）。
 - class 仅挂接此一套 IEO（**无** `__byvalInstanceProto`）。
-- struct 除 ByVal IEO 外**另建** ByObj IEO；enum 仅有 ByObj IEO（供 `zts.box` 产物）。
+- struct 除 ByVal IEO 外**另建** ByObj IEO；enum 仅有 ByObj IEO（供 `zents.box` 产物）。
 - 委托在 ByObj IEO 上额外挂 `[[Call]]`，使 `delegate(arg1, …)` 直接 invoke。
 
 **禁止**在实例 exotic object 根上重复挂载与三表同名的成员键。实例对象 **不得**通过属性 get **隐式**访问静态成员；须使用类型对象 `T`（见 [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §3.3）。
@@ -116,9 +116,9 @@ IEO（ByVal 或 ByObj 分派原型）
 |------|------|
 | `T.__byvalInstanceProto` → ByVal IEO | 构造 / push ByVal struct exotic object 时挂接分派原型 |
 | `T.__byobjInstanceProto` → ByObj IEO | 构造 class、boxed struct、boxed enum、数组等时挂接分派原型 |
-| `instance.__type` → `T` | 从实例反查类型、`zts.typeof`、重载注册等 |
+| `instance.__type` → `T` | 从实例反查类型、`zents.typeof`、重载注册等 |
 
-同一托管对象可因 **view 类型**不同而对应不同 `T` / IEO，但 identity 仍为同一实例；`zts.cast` 用于切换门面（Marshal 见 `../marshal/06-CLASS.md`）。
+同一托管对象可因 **view 类型**不同而对应不同 `T` / IEO，但 identity 仍为同一实例；`zents.cast` 用于切换门面（Marshal 见 `../marshal/06-CLASS.md`）。
 
 ---
 
@@ -137,7 +137,7 @@ enum 常量等可直接写入 `T` 的步骤可在挂接 STO 之前或之后，�
 
 ## 7. 实例分派键（现行）
 
-规范以 **`__byvalInstanceProto` / `__byobjInstanceProto`** 区分 struct 双形态；引用类型仅暴露 `__byobjInstanceProto`。`Nullable<T>` **不**挂接任何实例分派字段。键名以 `TsConsts` 为准。
+规范以 **`__byvalInstanceProto` / `__byobjInstanceProto`** 区分 struct 双形态；引用类型仅暴露 `__byobjInstanceProto`。`Nullable<T>` **不**挂接任何实例分派字段。键名以 `JsConsts` 为准。
 
 ---
 

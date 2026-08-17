@@ -1,7 +1,7 @@
 ---
 sidebar_position: 16
 title: 扩展方法
-description: "[TsExtension] 与 XML 将 C# extension 挂到被扩展类型的实例方法表。"
+description: "[JsExtension] 与 XML 将 C# extension 挂到被扩展类型的实例方法表。"
 ---
 
 # 扩展方法
@@ -14,13 +14,13 @@ description: "[TsExtension] 与 XML 将 C# extension 挂到被扩展类型的实
 
 | 方式 | 用法 |
 |------|------|
-| 能改被扩展类型源码 | **`[TsExtension(typeof(FooExt), …)]` 标在被扩展类型上** |
-| 第三方 / 预编译类型 | Settings **`tsExtensionXmlPaths`** + 根元素 **`ZTSExtensions`** |
+| 能改被扩展类型源码 | **`[JsExtension(typeof(FooExt), …)]` 标在被扩展类型上** |
+| 第三方 / 预编译类型 | Settings **`jsExtensionXmlPaths`** + 根元素 **`JsExtensions`** |
 
-`[TsExtension]` **不要**标在扩展类上（否则为发现扩展必须扫全程序集）。
+`[JsExtension]` **不要**标在扩展类上（否则为发现扩展必须扫全程序集）。
 
 ```csharp
-using ZTS;
+using ZenTS;
 
 public static class TransformExt
 {
@@ -30,29 +30,29 @@ public static class TransformExt
     }
 }
 
-[TsExtension(typeof(TransformExt))]
+[JsExtension(typeof(TransformExt))]
 public class PlayerView : MonoBehaviour { }
 ```
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<ZTSExtensions version="1">
+<JsExtensions version="1">
   <Assembly name="UnityEngine.CoreModule">
     <Type fullName="UnityEngine.Transform">
       <Extension assembly="Assembly-CSharp" fullName="MyGame.TransformExt"/>
     </Type>
   </Assembly>
-</ZTSExtensions>
+</JsExtensions>
 ```
 
 | 项 | 说明 |
 |----|------|
 | Attribute / XML | 同一被扩展类型取 **并集** |
-| 基类 | Bind **T** 时收集 **基类**上的 `[TsExtension]` |
+| 基类 | Bind **T** 时收集 **基类**上的 `[JsExtension]` |
 | Il2Cpp | XML 在 **Generate** 期写入静态表，Player **不**读 XML（改完须重新 Generate） |
 | 扩展类无法解析 | Generate **硬失败**；Mono **throw**（不静默丢） |
 
-本文件 **只**允许 `Assembly` → `Type` → `Extension`；不要写入 `Method` / `MarshalAs` / `alias`。与 [TsAlias](/docs/guides/ts-alias/) XML **分文件、分 Settings 字段**。
+本文件 **只**允许 `Assembly` → `Type` → `Extension`；不要写入 `Method` / `MarshalAs` / `alias`。与 [JsAlias](/docs/guides/js-alias/) XML **分文件、分 Settings 字段**。
 
 ## JS 用法
 
@@ -67,7 +67,7 @@ t.ResetLocal();   // 方法调用；底层是静态扩展方法
 
 ## 与实例方法同名
 
-扩展与真实例 **合并竞争**（同一 overload 组），**无**「实例优先」。消歧用全签名键或 `[TsAlias]`。见 [方法重载](/docs/guides/overloads/)。
+扩展与真实例 **合并竞争**（同一 overload 组），**无**「实例优先」。消歧用全签名键或 `[JsAlias]`。见 [方法重载](/docs/guides/overloads/)。
 
 ## 常见错误
 
@@ -76,11 +76,11 @@ t.ResetLocal();   // 方法调用；底层是静态扩展方法
 | `member not found`（`obj.Foo`） | 未在被扩展类型（或基类）配置扩展类；或 Il2Cpp 未重新 Generate |
 | 只能 `Ext.Foo(obj)` | 未走 static-as-instance / 未进 IEO（实现须符合规范 §4） |
 | 调到错误重载 | 合并竞争；用全签名键或 Alias 消歧 |
-| 标在扩展类上的 Attribute 无效 | 发现只扫被扩展类型上的 `[TsExtension]` |
+| 标在扩展类上的 Attribute 无效 | 发现只扫被扩展类型上的 `[JsExtension]` |
 
 ## 相关文档
 
 - [规范 13](/docs/spec/13-EXTENSION-METHODS/)
-- [TsAlias](/docs/guides/ts-alias/)（另一套 XML，勿混用）
+- [JsAlias](/docs/guides/js-alias/)（另一套 XML，勿混用）
 - [方法重载](/docs/guides/overloads/)
 - [成员绑定](/docs/spec/metatable/03-BINDING/)

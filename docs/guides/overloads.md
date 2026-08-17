@@ -1,12 +1,12 @@
 ---
 sidebar_position: 10
 title: 方法重载
-description: 默认分派、全签名键、TsAlias 与 register_method 短名。
+description: 默认分派、全签名键、JsAlias 与 register_method 短名。
 ---
 
 # 方法重载
 
-JavaScript 无静态类型，同名多签名不能靠编译期选定。ZTS 提供：默认分派、**全签名键**（Bind 自动）、`[TsAlias]`、以及 `zts.register_method` 短名。权威细则：[方法重载规范](/docs/spec/04-METHOD-OVERLOAD/)。
+JavaScript 无静态类型，同名多签名不能靠编译期选定。ZenTS 提供：默认分派、**全签名键**（Bind 自动）、`[JsAlias]`、以及 `zents.register_method` 短名。权威细则：[方法重载规范](/docs/spec/04-METHOD-OVERLOAD/)。
 
 日常 `demo.Run(10)` 在 [JS 调用 C#](/docs/guides/js-calling-csharp/) 已够用；歧义或热路径再读本篇。
 
@@ -16,7 +16,7 @@ JavaScript 无静态类型，同名多签名不能靠编译期选定。ZTS 提�
 |------|------|--------|
 | 默认 dispatch | `demo.Run(10)` | 实参能唯一匹配 |
 | **全签名键**（自动） | `demo['Run(System.Int32)'](5)` | 精确点名；**无需** `register_method` |
-| `[TsAlias]` | `demo.run_i32(5)` | 能改 C#，热路径短名 |
+| `[JsAlias]` | `demo.run_i32(5)` | 能改 C#，热路径短名 |
 | `register_method` | 注册后 `demo.run_i32(5)` | 不能改 C#，又要短名 |
 
 ### 方法调用 vs 提取函数
@@ -35,7 +35,7 @@ demo.Run(10);        // Run(int)
 demo.Run("hello");  // Run(string)
 ```
 
-仅一个 public 重载时为零分派；多个时按实参匹配。无匹配 → `throw Error('zts: no overload for …')`。
+仅一个 public 重载时为零分派；多个时按实参匹配。无匹配 → `throw Error('zents: no overload for …')`。
 
 ## 默认参数
 
@@ -81,12 +81,12 @@ fn(5);                                    // ❌ 提取后不绑定 this
 | `Run(System.Int32)` | 固定 `Run(int)` |
 | `Run(System.String)` | 固定 `Run(string)` |
 
-`zts.signature(zts.types.int32)` 只生成 `"(System.Int32)"`，**不能**单独当键。
+`zents.signature(zents.types.int32)` 只生成 `"(System.Int32)"`，**不能**单独当键。
 
-## `[TsAlias]` 与 `register_method`
+## `[JsAlias]` 与 `register_method`
 
 ```csharp
-[TsAlias("run_i32")]
+[JsAlias("run_i32")]
 public void Run(int value) { }
 public void Run(string value) { }
 ```
@@ -96,17 +96,17 @@ demo.run_i32(10);   // 短名；Run(int) 已换名，不再挂 "Run"
 demo.Run("hi");     // 未换名的 Run(string)
 
 const run = demo['Run(System.Int32)'];
-zts.register_method("run_hot", run);
+zents.register_method("run_hot", run);
 demo.run_hot(5);    // 空位短名；已占用名 → throw
 ```
 
-别名是 **换名**（替换默认 JS 键），不是追加。详见 [TsAlias](/docs/guides/ts-alias/)。扩展方法与实例合并候选见 [扩展方法](/docs/guides/extension-methods/)。
+别名是 **换名**（替换默认 JS 键），不是追加。详见 [JsAlias](/docs/guides/js-alias/)。扩展方法与实例合并候选见 [扩展方法](/docs/guides/extension-methods/)。
 
 ## 常见错误
 
 | 现象 | 处理 |
 |------|------|
-| 调错重载 / ambiguous | 全签名键、`[TsAlias]` 或 `register_method` |
+| 调错重载 / ambiguous | 全签名键、`[JsAlias]` 或 `register_method` |
 | `argument mismatch`（带默认） | 必选形参未给够；不能跳过中间参数 |
 | 仅用 `'(System.Int32)'` 作键 | **禁止**；须 `Run(System.Int32)` |
 | 提取后调用无 this | 保持 `obj.Method(...)` 方法调用形式 |
@@ -114,7 +114,7 @@ demo.run_hot(5);    // 空位短名；已占用名 → throw
 
 ## 相关文档
 
-- [TsAlias](/docs/guides/ts-alias/) — Attribute + XML
+- [JsAlias](/docs/guides/js-alias/) — Attribute + XML
 - [方法重载规范](/docs/spec/04-METHOD-OVERLOAD/)
-- [zts 标准库](/docs/guides/zts-lib/)
+- [zents 标准库](/docs/guides/zents-lib/)
 - [扩展方法](/docs/guides/extension-methods/)

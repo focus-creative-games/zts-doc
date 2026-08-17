@@ -1,5 +1,5 @@
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`metatable\04-SPECIAL-TYPES.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`metatable\04-SPECIAL-TYPES.md`）
 :::
 
 ﻿---
@@ -29,16 +29,16 @@ STO 提供 **属性 get/set**（静态三表），但 **无 `[[Construct]]`**、
 
 ### 1.2 Boxed 实例
 
-需要 **boxed enum**（ByObj exotic object）时使用 **`zts.box`**（`../05-LIB.md`），**不**提供类型对象构造入口：
+需要 **boxed enum**（ByObj exotic object）时使用 **`zents.box`**（`../05-LIB.md`），**不**提供类型对象构造入口：
 
 ```javascript
 const Color = CSharp.AC['MyGame.Color'];
-const redBox = zts.box(Color, Color.Red);
+const redBox = zents.box(Color, Color.Red);
 ```
 
-产物挂接 **`E.__byobjInstanceProto`**，`__zts_ud_kind` 为 `"byobj"`。实例三表通常为空或极少成员（enum 无 public 实例 field/method）；`toString` 建议形如 `EnumFullName(value)`。
+产物挂接 **`E.__byobjInstanceProto`**，`__zents_ud_kind` 为 `"byobj"`。实例三表通常为空或极少成员（enum 无 public 实例 field/method）；`toString` 建议形如 `EnumFullName(value)`。
 
-默认跨边界传参仍用 **number**（`../marshal/08-ENUM.md`）；`zts.box` 仅用于需要 **object 形参**、装箱语义的场景。
+默认跨边界传参仍用 **number**（`../marshal/08-ENUM.md`）；`zents.box` 仅用于需要 **object 形参**、装箱语义的场景。
 
 ### 1.3 与 class / struct 对比（分派）
 
@@ -47,14 +47,14 @@ const redBox = zts.box(Color, Color.Red);
 | 类型对象常量 | number 键 |
 | `[[Construct]]` | **无** |
 | `_default` | **无** |
-| 实例 exotic object | 仅 `zts.box` → ByObj |
+| 实例 exotic object | 仅 `zents.box` → ByObj |
 | 继承扁平化 | **无**（enum 无继承链合并） |
 
 ---
 
 ## 2. Nullable\<T\>（闭合值类型）
 
-`System.Nullable\`1` 经 `zts.make_generic_type` 闭合为类型对象 `N`，带 **`__nullable : true`**，与 `__struct` / `__enum` 互斥。
+`System.Nullable\`1` 经 `zents.make_generic_type` 闭合为类型对象 `N`，带 **`__nullable : true`**，与 `__struct` / `__enum` 互斥。
 
 ### 2.1 布局特例
 
@@ -66,13 +66,13 @@ const redBox = zts.box(Color, Color.Red);
 `new N(...)` 或 `N(...)`（若实现允许 callable）构造的是 **element 类型 `T` 的有值表示**，**不是** Nullable 包装实例。native 将 construct 绑定到 **element 类型** 的构造逻辑（与 `new T(...)` / 基元转换一致）：
 
 ```javascript
-const NullableInt = zts.make_generic_type(
+const NullableInt = zents.make_generic_type(
     CSharp.mscorlib['System.Nullable`1'],
-    zts.types.int32
+    zents.types.int32
 );
 const n = new NullableInt(42);   // JS number，非 exotic object
 
-const NullablePoint = zts.make_generic_type(
+const NullablePoint = zents.make_generic_type(
     CSharp.mscorlib['System.Nullable`1'],
     Point2D
 );
@@ -116,13 +116,13 @@ const move = p.translate;
 move(1, 0);               // ❌ 提取 function，不绑定 this（§02-INDEX §3.2）
 ```
 
-struct **无** C# 实例继承；Bind 期 **不** 合并基类实例成员（值类型无派生实例继承场景）。可选 `zts.box` 在 ByVal 与 ByObj 间转换（marshal 分册）。
+struct **无** C# 实例继承；Bind 期 **不** 合并基类实例成员（值类型无派生实例继承场景）。可选 `zents.box` 在 ByVal 与 ByObj 间转换（marshal 分册）。
 
 ---
 
 ## 4. 数组（szarray / mdarray）
 
-数组类型对象结构与普通引用类型类似：**仅 ByObj IEO**（数组对象为 `Il2CppArray*` / 等价引用）。STO **无** `[[Construct]]`（数组实例由 `zts.new_szarray_*` / `zts.new_mdarray_*` 创建，见 [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md)）。
+数组类型对象结构与普通引用类型类似：**仅 ByObj IEO**（数组对象为 `Il2CppArray*` / 等价引用）。STO **无** `[[Construct]]`（数组实例由 `zents.new_szarray_*` / `zents.new_mdarray_*` 创建，见 [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md)）。
 
 ### 4.1 实例特性
 
@@ -143,11 +143,11 @@ console.assert(arr.get(0) === 10);
 matrix.set(0, 1, 7); // mdarray：rank 个下标 + value
 ```
 
-实参个数：`get` 须等于 **rank**；`set` 须等于 **rank + 1**（末参为 value）。下标为 **C# 各维下标**（含 `lowerBound`），须为 **number**（**禁止** bigint 下标）。越界 → `throw new Error('zts: …')`。
+实参个数：`get` 须等于 **rank**；`set` 须等于 **rank + 1**（末参为 value）。下标为 **C# 各维下标**（含 `lowerBound`），须为 **number**（**禁止** bigint 下标）。越界 → `throw new Error('zents: …')`。
 
 `get` / `set` 为 **实例方法**，须 **`arr.get(0)`** 方法调用形式；提取后调用遵守 [02-INDEX.md](./02-INDEX.md) §3.2。
 
-仍可通过三表绑定的 **`GetValue` / `SetValue`** 等方法访问；基元断言优先 `get`（未装箱）。与 `zts.to_array` 的 0 基 JS Array 语义不同，见 `../marshal/07-ARRAY.md`。
+仍可通过三表绑定的 **`GetValue` / `SetValue`** 等方法访问；基元断言优先 `get`（未装箱）。与 `zents.to_array` 的 0 基 JS Array 语义不同，见 `../marshal/07-ARRAY.md`。
 
 ---
 
@@ -200,4 +200,4 @@ const result = cb(21);   // 等价 invoke；非 cb.Invoke(21) 必需
 | enum 常量 | **number** |
 | 数组下标 | **number**（整数） |
 | CLR 整数通道 | **number**；**不支持** bigint |
-| 脚本传入 bigint 给 C# 整数参数 | **throw** `zts: bigint is not supported for CLR integer types in v1`（或等价） |
+| 脚本传入 bigint 给 C# 整数参数 | **throw** `zents: bigint is not supported for CLR integer types in v1`（或等价） |

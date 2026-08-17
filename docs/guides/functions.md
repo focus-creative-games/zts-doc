@@ -10,7 +10,7 @@ description: "JS function ↔ C# Delegate 的路径、Event 与生命周期。"
 |------|------|------|
 | **JS → C# 形参** | `obj.Foo((...) => { ... })` | 隐式 `ReadDelegate` |
 | **C# → JS**（回调槽） | `handler(...)` | 可能是 **function** 或 Delegate exotic；统一用调用语法 |
-| **C# 按名取 JS** | `TsAppDomain.GetFunction<T>(mod, name)` | 见 [C# 调用 JS](/docs/guides/csharp-calling-js/) |
+| **C# 按名取 JS** | `JsAppDomain.GetFunction<T>(mod, name)` | 见 [C# 调用 JS](/docs/guides/csharp-calling-js/) |
 
 权威：[函数 Marshal](/docs/spec/marshal/09-FUNCTION/)、[`to_delegate`](/docs/spec/05-LIB/)、[`GetFunction`](/docs/spec/01-HOST-API/)。
 
@@ -70,18 +70,18 @@ handler(42);
 
 | 场景 | 做法 |
 |------|------|
-| 已知模块 + **命名导出** + 具体 `T` | **`TsAppDomain.GetFunction<T>`** |
-| JS 侧已有 function，要指定委托类型 | `zts.to_delegate(fn, closedDelegateType)` |
+| 已知模块 + **命名导出** + 具体 `T` | **`JsAppDomain.GetFunction<T>`** |
+| JS 侧已有 function，要指定委托类型 | `zents.to_delegate(fn, closedDelegateType)` |
 | C# 形参已是具体 `Action`/`Func` | 直接传 `function` |
 
 ```csharp
-var add = TsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
+var add = JsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
 Debug.Log(add(10, 20));
 ```
 
 - `GetFunction` 绑定 **命名导出**（非 `export default`）
 - API **不保证**跨调用复用同一 delegate；**热路径由调用方缓存**
-- `TsAppDomain.Reset` 生效后旧委托 **一律作废**，须重新 `GetFunction`
+- `JsAppDomain.Reset` 生效后旧委托 **一律作废**，须重新 `GetFunction`
 - `to_delegate` 第二参须为 **已闭合** 类型（如 `Action<int>`）
 
 ## 4. Event 与生命周期

@@ -38,7 +38,7 @@ export default function HomepageFeatures(): ReactNode {
             }
             description={
               <Translate id="homepage.feature.easy.desc">
-                声明式 GetFunction / [TsMarshalAs]，CSharp 懒绑定；无需 per-type Wrap
+                声明式 GetFunction / [JsMarshalAs]，CSharp 懒绑定；无需 per-type Wrap
                 白名单。与 ZLua 同一套产品心智。
               </Translate>
             }

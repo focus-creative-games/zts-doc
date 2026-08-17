@@ -6,17 +6,21 @@ description: 常见问题。
 
 # FAQ
 
-按主题分类；未覆盖见 [排障](/docs/guides/troubleshooting/) 或 [GitHub Issues](https://github.com/focus-creative-games/zts/issues)。
+按主题分类；未覆盖见 [排障](/docs/guides/troubleshooting/) 或 [GitHub Issues](https://github.com/focus-creative-games/zen-ts/issues)。
 
 ## 一般
 
-### ZTS 和 ZLua 是什么关系？
+### What is the relationship between ZenTS and the old name ZTS?
 
-同属 Code Philosophy 产品线：**语义同构**（`GetFunction`、Marshal、strict miss、Event 用 `add_`/`remove_`、双运行时等），脚本语言不同（JS/TS vs Lua）。可 **同工程并存**（不同 AppDomain 门面：`TsAppDomain` / `LuaAppDomain`），VM 与包彼此独立。选型叙事见 [为什么选择 ZTS](/docs/concepts/why-zts/)；Lua 侧见 [ZLua 文档](https://doc.zlua.cn)。
+**ZenTS** is the official product name (formerly **ZTS**). The lowercase code identifier is `zents` (`zents.*`, error prefix `zents:`). The Unity package and GitHub repo are [`zen-ts`](https://github.com/focus-creative-games/zen-ts). The website is [https://zen-ts.com](https://zen-ts.com).
+
+### ZenTS 和 ZLua 是什么关系？
+
+同属 Code Philosophy 产品线：**语义同构**（`GetFunction`、Marshal、strict miss、Event 用 `add_`/`remove_`、双运行时等），脚本语言不同（JS/TS vs Lua）。可 **同工程并存**（不同 AppDomain 门面：`JsAppDomain` / `LuaAppDomain`），VM 与包彼此独立。选型叙事见 [为什么选择 ZenTS](/docs/concepts/why-zents/)；Lua 侧见 [ZLua 文档](https://doc.zlua.cn)。
 
 ### 有 Unreal Engine 版本吗？
 
-有，仓库名为 **[zts-ue](https://github.com/focus-creative-games/zts-ue)**：面向 UE、对 C++ 优化的现代 TypeScript 方案。**目前仍在开发中**；本站文档仅覆盖 **Unity / 团结** 上的 ZTS，UE 用法与进度请跟进该仓库，勿与 Unity Issue 混提。
+有，仓库名为 **[zts-ue](https://github.com/focus-creative-games/zts-ue)**：面向 UE、对 C++ 优化的现代 TypeScript 方案。**目前仍在开发中**；本站文档仅覆盖 **Unity / 团结** 上的 ZenTS，UE 用法与进度请跟进该仓库，勿与 Unity Issue 混提。
 
 ### 运行时会执行 TypeScript 吗？
 
@@ -36,14 +40,14 @@ description: 常见问题。
 
 ### 发布前要不要 Generate？
 
-**Il2Cpp Player：要。** 菜单 **`ZTS/Generate/All`** 生成 **C++ MethodBridge stub**，**不是** Puerts/xLua 式海量 C# Wrap。Editor Mono 日常迭代 **不必** 每次 Generate。**C#→JS（`GetFunction`）无 Generate 步骤。** TypeScript 声明用 **`ZTS/Generate Typings`**，类型集须与 Generate **同源**。
+**Il2Cpp Player：要。** 菜单 **`ZenTS/Generate/All`** 生成 **C++ MethodBridge stub**，**不是** Puerts/xLua 式海量 C# Wrap。Editor Mono 日常迭代 **不必** 每次 Generate。**C#→JS（`GetFunction`）无 Generate 步骤。** TypeScript 声明用 **`ZenTS/Generate Typings`**，类型集须与 Generate **同源**。
 
 ### 脚本放哪里？Editor 和 Player 一样吗？
 
 | 形态 | Editor 权威源 | Player |
 |------|---------------|--------|
 | 纯 JS | 工程旁 `JsScripts/**/*.js`（或 loader 约定） | Sync 到 `StreamingAssets/Js/`（或约定路径） |
-| TypeScript | `TsProject/src/**` → emit `TsProject/out/**` | 拷贝 `out/**/*.js` → `StreamingAssets/ZTS/` |
+| TypeScript | `TsProject/src/**` → emit `TsProject/out/**` | 拷贝 `out/**/*.js` → `StreamingAssets/ZenTS/` |
 
 canonical 模块名 **不含** `.js` / `.ts`（如 `"app"`、`"game/logic"`）。见 [构建](/docs/guides/build/)、[C# 调用 JS](/docs/guides/csharp-calling-js/)。
 
@@ -73,14 +77,14 @@ obj.remove_OnHpChanged(handler); // 必须是同一 function 引用
 
 ### ref / out 怎么用？
 
-- **C#→JS**（`GetFunction`）：byref 默认 **OpaqueValue**，用 `zts.get_opaquevalue` / `set_opaquevalue`；**不可跨帧持久化**。
+- **C#→JS**（`GetFunction`）：byref 默认 **OpaqueValue**，用 `zents.get_opaquevalue` / `set_opaquevalue`；**不可跨帧持久化**。
 - **JS→C#**：裸 `number` **不写回**；同型 ByVal struct exotic 或 Opaque 可写回。
 
 详见 [ref/out/in](/docs/guides/ref-out-in/)。
 
 ### 为什么访问不存在的成员会抛错（strict miss）？
 
-ZTS 对未知成员 **throw `Error('zts: …')`**，**不**返回 `undefined`。依赖「读不到就 undefined」的旧习惯需要改写。见 [排障](/docs/guides/troubleshooting/)。
+ZenTS 对未知成员 **throw `Error('zents: …')`**，**不**返回 `undefined`。依赖「读不到就 undefined」的旧习惯需要改写。见 [排障](/docs/guides/troubleshooting/)。
 
 ---
 
@@ -89,8 +93,8 @@ ZTS 对未知成员 **throw `Error('zts: …')`**，**不**返回 `undefined`。
 ### 如何从 C# 调用 JS？
 
 ```csharp
-TsAppDomain.Initialize(loader);
-var add = TsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
+JsAppDomain.Initialize(loader);
+var add = JsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
 ```
 
 要求目标模块有 **named export**；`jsModule` 用 canonical；**不要**对 `csharp:` 调 `GetFunction`。热路径缓存 delegate；`Reset` 后旧委托作废。见 [C# 调用 JS](/docs/guides/csharp-calling-js/)。
@@ -111,7 +115,7 @@ var add = TsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
 
 按清单排查：
 
-1. 是否 **`ZTS/Install`** 且 **`ZTS/Generate/All`**
+1. 是否 **`ZenTS/Install`** 且 **`ZenTS/Generate/All`**
 2. 脚本是否 Sync / 拷贝到 StreamingAssets；canonical 是否带了多余 `.js`
 3. 是否仍用废弃 Event 糖语法
 4. Typings 与 Generate 是否同源

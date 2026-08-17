@@ -6,8 +6,8 @@ description: Editor Mono 路径笔记。
 
 # Mono 实现
 
-> **源码根（包内）：** `Packages/com.code-philosophy.zts/Runtime/Mono/`
-> **程序集：** `ZTS.Mono`；入口类型名 **`TsMonoAppDomain`**（根命名空间 `ZTS`，供 Common 反射解析）
+> **源码根（包内）：** `Packages/com.code-philosophy.zen-ts/Runtime/Mono/`
+> **程序集：** `ZenTS.Mono`；入口类型名 **`JsMonoAppDomain`**（根命名空间 `ZenTS`，供 Common 反射解析）
 > **JS 可见语义：** [spec](/docs/spec/00-OVERVIEW/) — 本文只写 Editor Mono 的职责划分、初始化与和 Il2Cpp 的实现差异。
 
 ---
@@ -25,16 +25,16 @@ Editor 需要快速迭代：以 **反射 + Expression Emit** 完成 JS→C# 桥�
 | 无法 Emit 的签名 | **绑定期显式失败**，禁止 silent `Method.Invoke` 热路径 |
 | Event | **无**专用对象；`add_*` / `remove_*` 作普通方法进 method 表 |
 
-QuickJS：Editor 经 `DllImport` 加载 Plugins 动态库；`ZTS.Mono` P/Invoke 调用引擎 API。见 [build/01-QUICKJS](/docs/spec/build/01-QUICKJS/)、[build/03-MONO-CALLBACK-GATE](/docs/spec/build/03-MONO-CALLBACK-GATE/)。
+QuickJS：Editor 经 `DllImport` 加载 Plugins 动态库；`ZenTS.Mono` P/Invoke 调用引擎 API。见 [build/01-QUICKJS](/docs/spec/build/01-QUICKJS/)、[build/03-MONO-CALLBACK-GATE](/docs/spec/build/03-MONO-CALLBACK-GATE/)。
 
 ---
 
 ## 2. 目录与模块职责（高阶）
 
-Mono 树与 Il2Cpp `zts-runtime` **按职责对照阅读**（PascalCase 目录名以包内为准；下列为角色，非保证每个文件名）：
+Mono 树与 Il2Cpp `zents-runtime` **按职责对照阅读**（PascalCase 目录名以包内为准；下列为角色，非保证每个文件名）：
 
 ```
-Runtime/Mono/                 ←→  libil2cpp/zts（zts-runtime）
+Runtime/Mono/                 ←→  libil2cpp/zents（zents-runtime）
 ├── Lvm/                      ←→  lvm/     宿主生命周期、JS 状态、标准库注册、loader
 ├── Mt/                       ←→  mt/      类型注册、三表 / MetaBinding、EnsureBinding
 ├── Marshaling/               ←→  marshal/ Push/Pop、Registry、overload（避让 System.Marshal）
@@ -44,9 +44,9 @@ Runtime/Mono/                 ←→  libil2cpp/zts（zts-runtime）
 └── DelegateImpl/             ←→  （命名避开 System.Delegate）
 ```
 
-**命名空间习惯：** `ZTS.Lvm` / `ZTS.Mt` / `ZTS.Marshaling` / `ZTS.Bridge` / `ZTS.Emit` 等（以包内 `asmdef` 为准）。
+**命名空间习惯：** `ZenTS.Lvm` / `ZenTS.Mt` / `ZenTS.Marshaling` / `ZenTS.Bridge` / `ZenTS.Emit` 等（以包内 `asmdef` 为准）。
 
-公共特性与门面在 **`ZTS.Common`**，Mono **不**被 Common 直接引用；由 `TsAppDomain` 反射创建后端。
+公共特性与门面在 **`ZenTS.Common`**，Mono **不**被 Common 直接引用；由 `JsAppDomain` 反射创建后端。
 
 ---
 
@@ -56,7 +56,7 @@ Runtime/Mono/                 ←→  libil2cpp/zts（zts-runtime）
 CSharp[asm][type] 或 csharp: named export
   → 解析 CLR Type
   → EnsureBinding(T)
-       · 扫描 public 成员（含继承扁平化、[TsAlias]、[TsExtension]）
+       · 扫描 public 成员（含继承扁平化、[JsAlias]、[JsExtension]）
        · 写入 STO / IEO 三表
        · 对每个桥接槽 Emit MethodBridge（Expression.Compile → 可调入口）
   → 缓存类型对象
@@ -75,7 +75,7 @@ CSharp[asm][type] 或 csharp: named export
 
 ## 4. 初始化顺序（概念）
 
-首次 `TsAppDomain.Initialize(moduleLoader)` → `TsMonoAppDomain`：
+首次 `JsAppDomain.Initialize(moduleLoader)` → `JsMonoAppDomain`：
 
 | 步骤 | 动作（概念） | 对照 Il2Cpp |
 |------|--------------|-------------|
@@ -83,14 +83,14 @@ CSharp[asm][type] 或 csharp: named export
 | 2 | Object / Struct / Meta 等 Registry 初始化 | 同左 |
 | 3 | 安装 exotic indexer / 绑定工厂 | Mono 独有：Emit 路径准备 |
 | 4 | 安装 ES module loader（先拦截 `csharp:`） | Loader hooks |
-| 5 | `ZTSLib` / `ztslib.js`（`zts` 全局） | `RegisterGlobals` + 嵌入脚本 |
+| 5 | `ZenTSLib` / `zentslib.js`（`zents` 全局） | `RegisterGlobals` + 嵌入脚本 |
 | 6 | `EnsureCSharpRoot` | `CSharp` 根 |
 | 7 | Delegate 桥预热（若有） | `DelegateBridge` |
-| 8 | 注册 `TsFramePump` | 同左 |
+| 8 | 注册 `JsFramePump` | 同左 |
 
 **重复 Initialize：** 已有主上下文 → **抛异常**（须 `Reset`）。
 
-**Reset：** 宿主面预约 → `TsFramePump` 在 **EndOfFrame** 执行 teardown + 按上表重建。公开 API **无** `Shutdown`。
+**Reset：** 宿主面预约 → `JsFramePump` 在 **EndOfFrame** 执行 teardown + 按上表重建。公开 API **无** `Shutdown`。
 
 Il2Cpp 在 AppDomain 级额外提前加载 stub 表；Mono 对应桥在 **EnsureBinding / Emit** 时写入三表。
 
@@ -115,7 +115,7 @@ Il2Cpp 在 AppDomain 级额外提前加载 stub 表；Mono 对应桥在 **Ensure
 
 ## 6. 验收关注点
 
-- Editor：与 Il2Cpp 一致的类型门面、`zts.cast`、虚方法、overload、struct、delegate、数组
+- Editor：与 Il2Cpp 一致的类型门面、`zents.cast`、虚方法、overload、struct、delegate、数组
 - 无 Event 专用 API；`add_` / `remove_` 仅普通方法
 - 热路径无 `Method.Invoke` 兜底；无法 Emit → 显式失败
 - 无 ReducedType 共享桥（那是 Il2Cpp 优化）

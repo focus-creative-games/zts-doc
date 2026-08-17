@@ -6,7 +6,7 @@ description: 一维 / 多维数组的创建、索引、to_array 与 to_bytes。
 
 # 数组
 
-通过 `zts` 创建 **szarray**（`T[]`）与 **mdarray**，在 JS 中按 C# 语义访问。权威：[数组 Marshal](/docs/spec/marshal/07-ARRAY/)、[类型系统 §7](/docs/spec/02-TYPE-SYSTEM/)、[05-LIB](/docs/spec/05-LIB/)。泛型集合（`List<T>` 等）见 [泛型](/docs/guides/generics/)。
+通过 `zents` 创建 **szarray**（`T[]`）与 **mdarray**，在 JS 中按 C# 语义访问。权威：[数组 Marshal](/docs/spec/marshal/07-ARRAY/)、[类型系统 §7](/docs/spec/02-TYPE-SYSTEM/)、[05-LIB](/docs/spec/05-LIB/)。泛型集合（`List<T>` 等）见 [泛型](/docs/guides/generics/)。
 
 数组实例为 **ByObj exotic**（Registry + GC root）。元素读写经 **`arr.get` / `arr.set`** 与 **`arr.length`**（**不**实现整数键 `arr[i]`）。
 
@@ -14,11 +14,11 @@ description: 一维 / 多维数组的创建、索引、to_array 与 to_bytes。
 
 ```javascript
 // 方式 A：元素类型 + 长度
-const arr = zts.new_szarray_by_element_type(zts.types.int32, 4);
+const arr = zents.new_szarray_by_element_type(zents.types.int32, 4);
 
 // 方式 B：先构造数组类型
-const IntArray = zts.make_szarray_type(zts.types.int32);
-const arr2 = zts.new_szarray_by_szarray_type(IntArray, 4);
+const IntArray = zents.make_szarray_type(zents.types.int32);
+const arr2 = zents.new_szarray_by_szarray_type(IntArray, 4);
 
 arr.set(0, 10);      // 0 基，与 C# 一致
 arr.set(1, 20);
@@ -35,7 +35,7 @@ console.log(arr.length);
 | 数组 ByObj exotic | 类型须匹配目标 `T[]` |
 | **JS `Array`** | 索引 `0..n-1` **连续、无 holes** → 构造 `T[n]` |
 | `null` | `null` |
-| `undefined`（必选） | **throw** `zts: argument missing` |
+| `undefined`（必选） | **throw** `zents: argument missing` |
 
 ```javascript
 Demo.Process(arr);           // exotic
@@ -49,10 +49,10 @@ Demo.Process(null);
 ## 与 JS Array / 字节互转
 
 ```javascript
-const t = zts.to_array(arr);   // JS Array，0 基；t[i] ↔ arr.get(i)
+const t = zents.to_array(arr);   // JS Array，0 基；t[i] ↔ arr.get(i)
 
 // blittable 元素 → 原始字节拷贝（Uint8Array 或 binary string，以实现为准）
-const bytes = zts.to_bytes(floatArr);
+const bytes = zents.to_bytes(floatArr);
 ```
 
 `to_bytes` 要求元素 blittable（基元或无引用字段的 struct）；**不接受** `bool[]` / `char[]` / 含引用字段。细则见 [05-LIB](/docs/spec/05-LIB/)。
@@ -60,8 +60,8 @@ const bytes = zts.to_bytes(floatArr);
 ## 多维数组
 
 ```javascript
-const IntMatrix = zts.make_mdarray_type(zts.types.int32, 2);
-const matrix = zts.new_mdarray_by_mdarray_type(
+const IntMatrix = zents.make_mdarray_type(zents.types.int32, 2);
+const matrix = zents.new_mdarray_by_mdarray_type(
   IntMatrix,
   [0, 0],    // lowbounds
   [3, 4]     // sizes
@@ -72,11 +72,11 @@ const matrix = zts.new_mdarray_by_mdarray_type(
 
 ## typeArg
 
-`zts.types.int32`、`zts.get_type_from_name("System.Int32")`、已解析类型对象、`make_*_type` 返回值均可作为元素类型实参。更多见 [zts 标准库](/docs/guides/zts-lib/)。
+`zents.types.int32`、`zents.get_type_from_name("System.Int32")`、已解析类型对象、`make_*_type` 返回值均可作为元素类型实参。更多见 [zents 标准库](/docs/guides/zents-lib/)。
 
 ## `byte[]` 与 Bytes
 
-默认同 szarray。若需 octet ↔ JS `string`，标 `[TsMarshalAs(Bytes)]`（见 [TsMarshalAs](/docs/guides/ts-marshal-as/)）。
+默认同 szarray。若需 octet ↔ JS `string`，标 `[JsMarshalAs(Bytes)]`（见 [JsMarshalAs](/docs/guides/js-marshal-as/)）。
 
 ## 常见错误
 
@@ -91,6 +91,6 @@ const matrix = zts.new_mdarray_by_mdarray_type(
 ## 相关文档
 
 - [数组 Marshal](/docs/spec/marshal/07-ARRAY/)
-- [zts 库规范 · 数组](/docs/spec/05-LIB/)
+- [zents 库规范 · 数组](/docs/spec/05-LIB/)
 - [泛型](/docs/guides/generics/)
-- [TsMarshalAs](/docs/guides/ts-marshal-as/)
+- [JsMarshalAs](/docs/guides/js-marshal-as/)

@@ -10,19 +10,19 @@ description: Mono Editor 与 Il2Cpp Player 的实现分工。
 **需要理解「为何 Editor 与 Player 实现不同、但脚本行为一致」的开发者。** 日常开发流程见 [Editor 与 Player](/docs/guides/editor-vs-player/)；构建见 [构建指南](/docs/guides/build/)。
 :::
 
-ZTS 维护 **一份** JS 可见语义契约（`spec/**`），两套实现：
+ZenTS 维护 **一份** JS 可见语义契约（`spec/**`），两套实现：
 
 | 环境 | 程序集 / 实现 | 桥接方式 |
 |------|---------------|----------|
-| **Unity Editor** | `ZTS.Mono` | Expression Tree / Emit + Exotic 分派 |
-| **Il2Cpp Player** | `ZTS.Il2Cpp` + `libil2cpp/zts`（包内 `ZTS~/zts-runtime`） | C++ MethodBridge + ReducedType stub |
+| **Unity Editor** | `ZenTS.Mono` | Expression Tree / Emit + Exotic 分派 |
+| **Il2Cpp Player** | `ZenTS.Il2Cpp` + `libil2cpp/zents`（包内 `ZenTS~/zents-runtime`） | C++ MethodBridge + ReducedType stub |
 
-公共门面与特性在 `ZTS.Common`：`TsAppDomain`、`[TsMarshalAs]`、`[TsAlias]`、`[TsExtension]` 等。
+公共门面与特性在 `ZenTS.Common`：`JsAppDomain`、`[JsMarshalAs]`、`[JsAlias]`、`[JsExtension]` 等。
 
 ```text
 flowchart LR
   subgraph Editor["Unity Editor"]
-    Mono["ZTS.Mono"]
+    Mono["ZenTS.Mono"]
     Emit["Expression Emit"]
   end
 
@@ -47,14 +47,14 @@ flowchart LR
 **契约：** Mono 允许更慢的实现路径，但脚本可观察行为（调用结果、异常、Marshal、miss）**必须与 Il2Cpp 一致**。
 
 ```text
-                    TsAppDomain.Initialize(moduleLoader)
+                    JsAppDomain.Initialize(moduleLoader)
                                     │
                     ┌───────────────┴───────────────┐
                     ▼                               ▼
-            ZTS.Mono (Editor)               ZTS.Il2Cpp (Player)
-            TsMonoAppDomain                 TsIl2CppAppDomain
+            ZenTS.Mono (Editor)               ZenTS.Il2Cpp (Player)
+            JsMonoAppDomain                 JsIl2CppAppDomain
                     │                               │
-        三表 exotic 分派 / Emit 桥          libil2cpp/zts (C++)
+        三表 exotic 分派 / Emit 桥          libil2cpp/zents (C++)
                     │                               │
                     └───────────────┬───────────────┘
                                     ▼
@@ -66,9 +66,9 @@ flowchart LR
 | 路径 | 内容 |
 |------|------|
 | `libil2cpp/quickjs` | QuickJS 引擎源码（Install 叠加） |
-| `libil2cpp/zts` | ZTS native（来自包内 `ZTS~/zts-runtime`） |
+| `libil2cpp/zents` | ZenTS native（来自包内 `ZenTS~/zents-runtime`） |
 
-开发期可编辑参考常见于：`build-win64/.../libil2cpp/zts`。
+开发期可编辑参考常见于：`build-win64/.../libil2cpp/zents`。
 
 ## 开发者需要记住的事
 

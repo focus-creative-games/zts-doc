@@ -16,7 +16,7 @@ function HomepageHeader() {
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
         <Heading as="h1" className="hero__title">
-          <Translate id="homepage.title">ZTS 文档</Translate>
+          <Translate id="homepage.title">ZenTS 文档</Translate>
           <span className="badgeAlpha">Alpha</span>
         </Heading>
         <p className="hero__subtitle">
@@ -35,13 +35,13 @@ function HomepageHeader() {
           </Link>
           <Link
             className="button button--outline button--secondary button--lg"
-            href="https://github.com/focus-creative-games/zts-demo">
+            href="https://github.com/focus-creative-games/zen-ts-demo">
             <Translate id="homepage.cta.demo">查看 Demo</Translate>
           </Link>
         </div>
         <p className={styles.heroMeta}>
           <Translate id="homepage.heroMeta">
-            Unity 2022.3 LTS · QuickJS · Editor Mono + Il2Cpp Player · 与 ZLua 同构
+            Unity 2021.3 / 2022.3 / 6000 · 团结 · QuickJS · Editor Win/macOS · Player 含 Win64 / Android / iOS / WebGL / 小游戏 / 鸿蒙
           </Translate>
         </p>
       </div>
@@ -50,11 +50,11 @@ function HomepageHeader() {
 }
 
 const CSHARP_INVOKE = `// Bootstrap
-TsAppDomain.Initialize(LoadJsModule);
+JsAppDomain.Initialize(LoadJsModule);
 
 void Start()
 {
-    var add = TsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
+    var add = JsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
     Debug.Log(add(10, 20)); // 30
 }`;
 
@@ -109,7 +109,7 @@ export default function Home(): ReactNode {
       description={translate({
         id: 'homepage.layoutDesc',
         message:
-          'ZTS：Unity 上基于 QuickJS 的 TypeScript / JavaScript 脚本方案，设计与 ZLua 对齐。',
+          'ZenTS：Unity 上基于 QuickJS 的 TypeScript / JavaScript 脚本方案，设计与 ZLua 对齐。',
       })}>
       <HomepageHeader />
       <main>

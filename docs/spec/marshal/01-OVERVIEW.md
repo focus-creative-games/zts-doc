@@ -3,14 +3,14 @@ sidebar_position: 7
 title: "Marshal 总览 — 默认规则矩阵"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\01-OVERVIEW.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\01-OVERVIEW.md`）
 :::
 
 
 # Marshal 总览 — 默认规则矩阵
 
-> **规范性：** 未标注 `[TsMarshalAs]`（或标注为 `TsMarshalType.Default`）时，各 CLR 类型在 **C# ↔ JavaScript** 双向调用中的默认 Marshal。
-> **覆盖：** 参数、返回值、字段、属性上的 `[TsMarshalAs]` 见 [02-MARSHAL-AS.md](./02-MARSHAL-AS.md)。
+> **规范性：** 未标注 `[JsMarshalAs]`（或标注为 `JsMarshalType.Default`）时，各 CLR 类型在 **C# ↔ JavaScript** 双向调用中的默认 Marshal。
+> **覆盖：** 参数、返回值、字段、属性上的 `[JsMarshalAs]` 见 [02-MARSHAL-AS.md](./02-MARSHAL-AS.md)。
 > **实现：** → `impl/marshal/`。
 
 ---
@@ -53,7 +53,7 @@ QuickJS 同时存在 `undefined` 与 `null`。**禁止**在规范层将二者无
 | JS 实参 | 目标 CLR 类型 | 行为 |
 |---------|---------------|------|
 | **`null`** | 引用类型 / delegate / 数组 / `Nullable<T>` | **`null`** / 无值 |
-| **`undefined`** | 引用类型 / delegate / 数组（**必选**形参） | **`throw Error('zts: argument missing: …')`** — 必选引用形参须显式传 **`null`** |
+| **`undefined`** | 引用类型 / delegate / 数组（**必选**形参） | **`throw Error('zents: argument missing: …')`** — 必选引用形参须显式传 **`null`** |
 | **`undefined`** | `Nullable<T>` | 视为 **无值**（`null`） |
 | **`undefined`** | 带 CLR **`HasDefault`** 的可选形参（尾部连续段） | 使用 **Bind 期物化** 的默认值；**不**消耗「实参个数」 |
 | **`undefined`** | 值类型（非 `Nullable`）必选形参 | **`throw Error`** |
@@ -63,9 +63,9 @@ QuickJS 同时存在 `undefined` 与 `null`。**禁止**在规范层将二者无
 
 | 场景 | 行为 |
 |------|------|
-| 读 C# 绑定成员 miss | **`throw Error('zts: member not found: …')`** — **不是** `undefined` |
-| 读 JS 普通对象不存在的属性 | ECMAScript 默认 **`undefined`**（与 ZTS 无关） |
-| C# **只写属性** 读 | **`throw Error('zts: property has no getter: …')`** |
+| 读 C# 绑定成员 miss | **`throw Error('zents: member not found: …')`** — **不是** `undefined` |
+| 读 JS 普通对象不存在的属性 | ECMAScript 默认 **`undefined`**（与 ZenTS 无关） |
+| C# **只写属性** 读 | **`throw Error('zents: property has no getter: …')`** |
 | 数组 exotic **`get(i)`** 越界 | **`throw Error`**（见 [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §7） |
 
 ### 2.5 数组与空洞
@@ -128,16 +128,16 @@ function onOptional(x, y) {
 | 函数指针 | **Pointer** | **Pointer** | 同上 |
 | `System.TypedReference` | **OpaqueValue** | **OpaqueValue** | 默认即此 |
 | `string` | `string` | `string` | |
-| `byte[]` | **ByObj exotic** | **ByObj exotic** 或 **Array** | 与 `T[]` 相同；`[TsMarshalAs(Bytes)]` → ↔ **string** |
+| `byte[]` | **ByObj exotic** | **ByObj exotic** 或 **Array** | 与 `T[]` 相同；`[JsMarshalAs(Bytes)]` → ↔ **string** |
 | `class` | **ByObj exotic** | **ByObj exotic** | 引用身份；`null` ↔ **`null`**；门面 = 声明类型，见 [06-CLASS.md](./06-CLASS.md) |
 | `T[]`（szarray） | **ByObj exotic** | **ByObj exotic** 或 **Array** | 见 §5、[07-ARRAY.md](./07-ARRAY.md) |
 | `T[,…]`（mdarray） | **ByObj exotic** | **仅 ByObj exotic** | **不**接受 JS Array |
-| `enum` | `number`（整数） | `number`（整数）或 **ByObj exotic**（boxed） | 默认不推 exotic；boxed 仅经 `zts.box`；见 [08-ENUM.md](./08-ENUM.md) |
+| `enum` | `number`（整数） | `number`（整数）或 **ByObj exotic**（boxed） | 默认不推 exotic；boxed 仅经 `zents.box`；见 [08-ENUM.md](./08-ENUM.md) |
 | `struct` | **ByVal exotic** 或 **OpaqueValue** | **ByVal exotic** 或 `new Type(...)` | C#→Lua 常规见 [05-STRUCT.md](./05-STRUCT.md)；`ref`/`in`/`out` 或 `[OpaqueValue]` → OpaqueValue |
 | `Delegate` | **function** 或 **Delegate exotic** | **function** 或 **Delegate exotic** | 见 [09-FUNCTION.md](./09-FUNCTION.md) |
 | `object` | **ByObj exotic**（`System.Object` 门面） | `boolean`/`number`/`string`/exotic 等 | 门面 = `object`；见 [06-CLASS.md](./06-CLASS.md) |
 | `Nullable<T>` | 同 `T` 或 **`null`** | 同 `T`、**`null`** 或 **`undefined`**（无值） | §2 |
-| `interface` | **ByObj exotic** | **ByObj exotic** | 同 class；可 `[TsMarshalAs(Object\|UnpackedValues)]` 仅 struct 场景不适用 interface |
+| `interface` | **ByObj exotic** | **ByObj exotic** | 同 class；可 `[JsMarshalAs(Object\|UnpackedValues)]` 仅 struct 场景不适用 interface |
 | `decimal` | **暂不支持**（默认） | **暂不支持** | v1 默认路径未纳入 |
 | `ref struct` | 见 [05-STRUCT.md](./05-STRUCT.md)、[../05-LIB.md](../05-LIB.md) | 同左 | 不能作为普通 by-val 默认传递 |
 | `void`（返回值） | `undefined` | — | |
@@ -161,7 +161,7 @@ function onOptional(x, y) {
 |---------|---------|---------|
 | **`T[]`（szarray）** | **ByObj exotic** | **ByObj exotic**，**或** **Array 形态**（§5.2） |
 | **`T[,…]`（mdarray）** | **ByObj exotic** | **仅 ByObj exotic** |
-| **`byte[]`** | 同 szarray（除非 `[TsMarshalAs(Bytes)]`） | 同 szarray |
+| **`byte[]`** | 同 szarray（除非 `[JsMarshalAs(Bytes)]`） | 同 szarray |
 
 ### 5.1 C# → JS
 
@@ -199,7 +199,7 @@ function onOptional(x, y) {
 **规则摘要：**
 
 1. **C# → JS**：按 **声明类型** 选择默认形态与 ByObj IEO；**不**因运行时类型改挂更具体类型或改走 `string` 等特殊 Marshal。
-2. **Downcast**：仅 `zts.cast(obj, targetType)`（见 [../05-LIB.md](../05-LIB.md)）。
+2. **Downcast**：仅 `zents.cast(obj, targetType)`（见 [../05-LIB.md](../05-LIB.md)）。
 3. **对象缓存**：键 **`(identity, viewType)`**；`ObjectRegistry` 槽位为 **GC root**（见 [../10-LIFETIME.md](../10-LIFETIME.md)）。
 
 完整规则见 [06-CLASS.md](./06-CLASS.md)。
@@ -210,7 +210,7 @@ function onOptional(x, y) {
 
 | 主题 | 文档 |
 |------|------|
-| `[TsMarshalAs]` 覆盖默认 | [02-MARSHAL-AS.md](./02-MARSHAL-AS.md) |
+| `[JsMarshalAs]` 覆盖默认 | [02-MARSHAL-AS.md](./02-MARSHAL-AS.md) |
 | `ref` / `in` / `out` | [03-BYREF.md](./03-BYREF.md) |
 | OpaqueValue | [04-OPAQUE.md](./04-OPAQUE.md) |
 | struct | [05-STRUCT.md](./05-STRUCT.md) |
@@ -220,4 +220,4 @@ function onOptional(x, y) {
 | delegate / JS function | [09-FUNCTION.md](./09-FUNCTION.md) |
 | 指针 / 不支持类型 | [10-POINTER.md](./10-POINTER.md) |
 | 重载与实参匹配 | [../04-METHOD-OVERLOAD.md](../04-METHOD-OVERLOAD.md) |
-| `zts.*` API | [../05-LIB.md](../05-LIB.md) |
+| `zents.*` API | [../05-LIB.md](../05-LIB.md) |

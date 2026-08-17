@@ -3,7 +3,7 @@ sidebar_position: 16
 title: "指针与不支持类型"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\10-POINTER.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\10-POINTER.md`）
 :::
 
 
@@ -45,7 +45,7 @@ title: "指针与不支持类型"
 | | `.` 成员、算术 |
 | | 持久化后在异步 / 后续 **JS_Call** 使用 |
 
-### 2.3 `[TsMarshalAs]`
+### 2.3 `[JsMarshalAs]`
 
 允许 `Default` 与 **`OpaqueValue`**（仅 C#→JS）。`Object`、`Table` 等 **非法**。
 
@@ -81,7 +81,7 @@ title: "指针与不支持类型"
 |------|------|
 | **C# → JS** | Push **OpaqueValue**；`get`/`set_opaquevalue` |
 | **JS → C#** | **仅** 兼容 OpaqueValue |
-| 其它 `[TsMarshalAs]` | **非法** |
+| 其它 `[JsMarshalAs]` | **非法** |
 
 ---
 
@@ -111,7 +111,7 @@ title: "指针与不支持类型"
 
 ### 5.5 `bigint`（JS）
 
-**禁止**作为 CLR 整型 / enum / `IntPtr` 通道 → **`throw Error('zts: …')`**（[../00-OVERVIEW.md](../00-OVERVIEW.md) §1.3）。
+**禁止**作为 CLR 整型 / enum / `IntPtr` 通道 → **`throw Error('zents: …')`**（[../00-OVERVIEW.md](../00-OVERVIEW.md) §1.3）。
 
 ### 5.6 开放泛型形参
 

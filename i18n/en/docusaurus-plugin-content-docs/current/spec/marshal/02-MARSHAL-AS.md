@@ -1,36 +1,36 @@
 ---
 sidebar_position: 8
-title: "`[TsMarshalAs]` 与 `TsMarshalType`"
+title: "`[JsMarshalAs]` 与 `JsMarshalType`"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\02-MARSHAL-AS.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\02-MARSHAL-AS.md`）
 :::
 
 
-# `[TsMarshalAs]` 与 `TsMarshalType`
+# `[JsMarshalAs]` 与 `JsMarshalType`
 
 > **规范性：** 参数、返回值、字段、属性及类型（`class` / `struct`）上的 Marshal 覆盖规则。
 > **默认矩阵：** 未覆盖时见 [01-OVERVIEW.md](./01-OVERVIEW.md)。
-> **源码：** `ZTS.Common` 中的 `TsMarshalAsAttribute`、`TsMarshalType`（枚举名以本文为准，含 **`OpaqueValue`**）。
+> **源码：** `ZenTS.Common` 中的 `JsMarshalAsAttribute`、`JsMarshalType`（枚举名以本文为准，含 **`OpaqueValue`**）。
 > **外部配置：** 预编译程序集可通过 XML 配置等价规则，见 **§9**。
 
 ---
 
 ## 1. 概述
 
-`[TsMarshalAs]` 可标注于：
+`[JsMarshalAs]` 可标注于：
 
 - **参数**、**返回值**、**字段**、**属性**
 - **类型**（`class` / `struct` 上的类型级默认）
 
-**不可** 标注于 **方法**（绑定期 `TsMarshalAsConfigurationException` 或 Mono 路径告警回退）。
+**不可** 标注于 **方法**（绑定期 `JsMarshalAsConfigurationException` 或 Mono 路径告警回退）。
 
 **不可** 作用于 **未确定（open / 含泛型形参）的 CLR 类型位置**（§1.1）；可作用于 **已闭合** 的泛型类型位置（如 `List<int>` 形参）。XML 规则与 Attribute **同一约束**（§9.3.1）。
 
 覆盖标注须符合 **§3 合法集合**，否则 **§4.1** 回退 `Default` 并在 Editor 打错误日志。
 
 ```csharp
-public enum TsMarshalType
+public enum JsMarshalType
 {
     Default,
     Object,           // 强制 ByObj exotic（原 zlua UserData）
@@ -44,26 +44,26 @@ public enum TsMarshalType
     AttributeTargets.Parameter | AttributeTargets.ReturnValue |
     AttributeTargets.Field | AttributeTargets.Property |
     AttributeTargets.Class | AttributeTargets.Struct)]
-public sealed class TsMarshalAsAttribute : Attribute
+public sealed class JsMarshalAsAttribute : Attribute
 {
-    public TsMarshalType MarshalType { get; }
+    public JsMarshalType JsMarshalType { get; }
 
     /// <summary>
-    /// <see cref="TsMarshalType.Table"/> / <see cref="TsMarshalType.UnpackedValues"/> 必填。
+    /// <see cref="JsMarshalType.Table"/> / <see cref="JsMarshalType.UnpackedValues"/> 必填。
     /// 元素为 CLR 字段名或 property 名，可混合；顺序即 UnpackedValues 的实参顺序 / Table 的读写顺序。
     /// 名字以 '?' 结尾表示 Table、JS→C# 时缺键不赋值（§6）。
     /// </summary>
     public string[] Members { get; set; }
 
-    public TsMarshalAsAttribute(TsMarshalType marshalType = TsMarshalType.Default);
+    public JsMarshalAsAttribute(JsMarshalType jsMarshalType = JsMarshalType.Default);
 }
 ```
 
-> **命名说明：** 文档与 XML 使用 **`TsMarshalType.Object`**（语义等同 zlua 的 `UserData` / ByObj exotic）。实现 C# 枚举名须与本文一致。
+> **命名说明：** 文档与 XML 使用 **`JsMarshalType.Object`**（语义等同 zlua 的 `UserData` / ByObj exotic）。实现 C# 枚举名须与本文一致。
 
 ### 1.1 泛型：只允许「已确定」的类型位置
 
-`[TsMarshalAs]`（及等价 XML）**不得**用在仍含未绑定泛型形参的类型上：
+`[JsMarshalAs]`（及等价 XML）**不得**用在仍含未绑定泛型形参的类型上：
 
 | 禁止 | 允许 |
 |------|------|
@@ -75,26 +75,26 @@ public sealed class TsMarshalAsAttribute : Attribute
 
 ---
 
-## 2. `TsMarshalType` 枚举说明
+## 2. `JsMarshalType` 枚举说明
 
 | 值 | 适用方向 | 说明 |
 |----|----------|------|
 | **`Default`** | 双向 | 使用 [01-OVERVIEW.md](./01-OVERVIEW.md) 默认规则。 |
 | **`Object`** | 双向 | **仅** 可标注于 **托管引用类型** 与 **struct**（§3）。强制 **ByObj / ByVal exotic** 形态。<br>• **实质有效目标：** 几乎只有 **`string`**——默认 C#↔JS 为 JS **string**，标注后改为 **ByObj exotic**（托管 `System.String`）<br>• **class / 数组 / 普通 struct：** 默认已是 exotic，标注与 `Default` **等价**<br>• **`Delegate`：** 可标注但 **无实质作用**（仍按 [09-FUNCTION.md](./09-FUNCTION.md)） |
 | **`Bytes`** | 双向 | C# **`byte[]`** ↔ JS **`string`**（原始 octet）。Pop 时 **不接受** exotic / Array（标注于 `byte[]` 时）。 |
-| **`OpaqueValue`** | **仅 C# → JS** | Push **OpaqueValue**（见 [04-OPAQUE.md](./04-OPAQUE.md)）。<br>• **`ref`/`in`/`out`** 默认已是 OpaqueValue<br>• by-val 可对 struct / 引用 / enum / 指针等显式标注；**基元** 与 **`IntPtr` 族禁止** by-val 标注<br>• 脚本经 `zts.get_opaquevalue` / `zts.set_opaquevalue` |
+| **`OpaqueValue`** | **仅 C# → JS** | Push **OpaqueValue**（见 [04-OPAQUE.md](./04-OPAQUE.md)）。<br>• **`ref`/`in`/`out`** 默认已是 OpaqueValue<br>• by-val 可对 struct / 引用 / enum / 指针等显式标注；**基元** 与 **`IntPtr` 族禁止** by-val 标注<br>• 脚本经 `zents.get_opaquevalue` / `zents.set_opaquevalue` |
 | **`UnpackedValues`** | **双向** | **普通 struct / closed 泛型 struct**（**不含** Nullable）。`Members` 列出的成员与 **连续多个 JS 实参** 互转；占用 **N 个实参槽**（§5.6） |
 | **`Table`** | **双向** | **struct / closed 泛型 struct / `Nullable<struct>`**。单个 **plain object**（`{}` 键值）↔ 成员；`Nullable` 无值 → **`null`** 或 **`undefined`**（§6）；须 **`Members`** |
 
 ---
 
-## 3. 各类型的合法 `TsMarshalType` 集合
+## 3. 各类型的合法 `JsMarshalType` 集合
 
 每个 CLR 槽位仅允许 **§2** 中相容的值（**`Default` 对所有类型均合法**）。下表列出 **`Default` 之外** 可显式标注的值。
 
 **`OpaqueValue`：** 仅 C#→JS 方向可标注（§3.1）。**基元** 与 **`IntPtr` 族** **仅 `Default`**。
 
-| C# 类型（分类） | 合法 `TsMarshalType`（`Default` 除外） | 说明 |
+| C# 类型（分类） | 合法 `JsMarshalType`（`Default` 除外） | 说明 |
 |-----------------|----------------------------------------|------|
 | **基元** | （无；**仅 `Default`**） | **`ref`/`in`/`out` 基元** → 默认 OpaqueValue |
 | **`IntPtr` / `UIntPtr` / `nint` / `nuint`** | （无；**仅 `Default`**） | 整型数值 Marshal |
@@ -102,7 +102,7 @@ public sealed class TsMarshalAsAttribute : Attribute
 | **`byte[]`** | `Bytes`、`Object`、`OpaqueValue` | |
 | **`T[]`（szarray）** | `Object`、`OpaqueValue` | |
 | **`T[,…]`（mdarray）** | `Object`、`OpaqueValue` | JS→C# **不** 因标注接受 Array |
-| **`enum`** | `OpaqueValue` | boxed 用 `zts.box` |
+| **`enum`** | `OpaqueValue` | boxed 用 `zents.box` |
 | **`struct`** | `Object`、`OpaqueValue`、`Table`、`UnpackedValues` | |
 | **`class` / `interface`** | `Object`、`OpaqueValue` | **不可** `Table` / `UnpackedValues` |
 | **`Delegate`** | `Object`、`OpaqueValue` | `Object` 无实质作用 |
@@ -117,7 +117,7 @@ public sealed class TsMarshalAsAttribute : Attribute
 
 ### 3.1 方向过滤
 
-| `TsMarshalType` | 允许标注的方向 |
+| `JsMarshalType` | 允许标注的方向 |
 |-----------------|----------------|
 | `Object`、`Bytes`、`Table`、`UnpackedValues` | **双向** |
 | `OpaqueValue` | **仅 C# → JS**；标于纯 JS→C# 形参 → **非法** |
@@ -134,7 +134,7 @@ Mono 解析 Attribute 时非法组合 → **按 `Default` 处理** + **Editor �
 
 同类配置错误可 **中止 Generate**，不写入 Player 绑定表。
 
-运行时 arity 错误（`UnpackedValues` 实参个数 ≠ `Members.Length`）→ **`throw Error('zts: …')`**。
+运行时 arity 错误（`UnpackedValues` 实参个数 ≠ `Members.Length`）→ **`throw Error('zents: …')`**。
 
 ---
 
@@ -157,7 +157,7 @@ Mono 解析 Attribute 时非法组合 → **按 `Default` 处理** + **Editor �
 ### 5.2 `UnpackedValues` 示例
 
 ```csharp
-void Foo([TsMarshalAs(TsMarshalType.UnpackedValues, Members = new[] { "Y", "X" })] Vector2 v);
+void Foo([JsMarshalAs(JsMarshalType.UnpackedValues, Members = new[] { "Y", "X" })] Vector2 v);
 ```
 
 ```javascript
@@ -165,7 +165,7 @@ Foo(2.0, 1.0);   // 第一实参 → Y，第二 → X
 ```
 
 ```csharp
-[return: TsMarshalAs(TsMarshalType.UnpackedValues, Members = new[] { "X", "Y" })]
+[return: JsMarshalAs(JsMarshalType.UnpackedValues, Members = new[] { "X", "Y" })]
 Vector2 GetPos();
 // JS: const [x, y] = CS.Demo.GetPos();  // 或多返回值绑定为 Array，见 bridge 约定
 ```
@@ -173,7 +173,7 @@ Vector2 GetPos();
 ### 5.3 `Table` 示例
 
 ```csharp
-void Foo([TsMarshalAs(TsMarshalType.Table, Members = new[] { "X", "Y" })] Vector2 v);
+void Foo([JsMarshalAs(JsMarshalType.Table, Members = new[] { "X", "Y" })] Vector2 v);
 ```
 
 ```javascript
@@ -192,7 +192,7 @@ Bar({ X: 1, Y: 2 });
 
 ### 5.5 实参槽占用与调用约定
 
-| `TsMarshalType` | 占用 JS 实参槽数 |
+| `JsMarshalType` | 占用 JS 实参槽数 |
 |-----------------|------------------|
 | **`Table`** 及其它（除 UnpackedValues） | **1** |
 | **`UnpackedValues`** | **N**（`N = Members.Length`） |
@@ -245,7 +245,7 @@ CS.Demo.Sum(null);
 
 ## 8. 解析优先级
 
-1. 参数 / 返回值上的 `[TsMarshalAs]`（≠ Default）
+1. 参数 / 返回值上的 `[JsMarshalAs]`（≠ Default）
 2. XML 对应规则（§9）
 3. 字段 / 属性上的 Attribute → XML
 4. 类型级（**仅非泛型**）Attribute → XML
@@ -257,20 +257,20 @@ CS.Demo.Sum(null);
 
 ## 9. XML 外部配置（预编译程序集）
 
-> **与 `[TsAlias]` 分离：** 别名使用 **`tsAliasXmlPaths`** / 根元素 **`TsAlias`**（见 [../04-METHOD-OVERLOAD.md](../04-METHOD-OVERLOAD.md) §5.4）。
+> **与 `[JsAlias]` 分离：** 别名使用 **`jsAliasXmlPaths`** / 根元素 **`JsAlias`**（见 [../04-METHOD-OVERLOAD.md](../04-METHOD-OVERLOAD.md) §5.4）。
 
 ### 9.1 配置入口
 
-Editor **`ZTS.Settings`**（`ProjectSettings/ZTS.asset`）：
+Editor **`ZenTS.Settings`**（`ProjectSettings/ZenTS.asset`）：
 
-- **`marshalAsXmlPaths`**：仅承载 `ZTSMarshalAs` 规则
-- **`tsAliasXmlPaths`**：别名专用（分开配置）
+- **`marshalAsXmlPaths`**：仅承载 `ZenTSMarshalAs` 规则
+- **`jsAliasXmlPaths`**：别名专用（分开配置）
 
 ### 9.2 文件格式
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<ZTSMarshalAs version="1">
+<ZenTSMarshalAs version="1">
   <Assembly name="UnityEngine.CoreModule">
     <Type fullName="UnityEngine.Vector3">
       <MarshalAs type="Table" members="x,y,z" />
@@ -283,7 +283,7 @@ Editor **`ZTS.Settings`**（`ProjectSettings/ZTS.asset`）：
       </Method>
     </Type>
   </Assembly>
-</ZTSMarshalAs>
+</ZenTSMarshalAs>
 ```
 
 | 元素 / 属性 | 含义 |

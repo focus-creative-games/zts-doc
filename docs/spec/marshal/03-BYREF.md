@@ -3,7 +3,7 @@ sidebar_position: 9
 title: "`ref` / `in` / `out` Marshal"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\03-BYREF.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\03-BYREF.md`）
 :::
 
 
@@ -32,7 +32,7 @@ title: "`ref` / `in` / `out` Marshal"
 
 形参为 `ref` / `in` / `out A` 时，**默认** Push **OpaqueValue**（opaque handle，指向 C# 调用栈上该参数槽）。
 
-- 脚本经 `zts.get_opaquevalue` / `zts.set_opaquevalue` 读写。
+- 脚本经 `zents.get_opaquevalue` / `zents.set_opaquevalue` 读写。
 - **不** Push ByVal / ByObj exotic。
 - 完整规则：[04-OPAQUE.md](./04-OPAQUE.md)。
 
@@ -62,7 +62,7 @@ CS.Demo.Offset(p, 10, 20);     // payload 真写回
 
 ## 4. JavaScript → C#：分支细则
 
-按实参形态与 **A** 类别判定。类型不兼容 → **`throw Error('zts: …')`**。
+按实参形态与 **A** 类别判定。类型不兼容 → **`throw Error('zents: …')`**。
 
 ### 4.1 OpaqueValue
 
@@ -175,8 +175,8 @@ CS.Demo.Offset(p, 10, 20);
 console.assert(p.x === 11);
 
 function OnRefInt(h) {
-    const v = zts.get_opaquevalue(h);
-    zts.set_opaquevalue(h, v + 1);
+    const v = zents.get_opaquevalue(h);
+    zents.set_opaquevalue(h, v + 1);
     CS.Demo.IncrementOpaque(h);
 }
 ```

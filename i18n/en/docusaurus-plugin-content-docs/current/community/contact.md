@@ -8,11 +8,11 @@ description: QQ、Discord、Issue 与仓库。
 
 ## 渠道
 
-- QQ 群：`1095435513`（ZTS 交流群）
+- QQ 群：`1095435513`（ZenTS 交流群）
 - Discord：[https://discord.gg/5bT7w9aRMz](https://discord.gg/5bT7w9aRMz)
-- 源码与 Issue：[focus-creative-games/zts](https://github.com/focus-creative-games/zts)
-- Demo：[zts-demo](https://github.com/focus-creative-games/zts-demo)
-- 文档站：[zts.code-philosophy.com](https://zts.code-philosophy.com/)；文档源码 [zts-doc](https://github.com/focus-creative-games/zts-doc)
+- 源码与 Issue：[focus-creative-games/zen-ts](https://github.com/focus-creative-games/zen-ts)
+- Demo：[zen-ts-demo](https://github.com/focus-creative-games/zen-ts-demo)
+- 文档站：[zen-ts.com](https://zen-ts.com/)；文档源码 [zen-ts-doc](https://github.com/focus-creative-games/zen-ts-doc)
 - 邮件：`zts@code-philosophy.com`
 
 ### 同族产品
@@ -30,7 +30,7 @@ description: QQ、Discord、Issue 与仓库。
 【环境】
 - Unity / 团结版本：
 - 平台：Editor（Win / macOS） / Player（Win64 / Android / iOS / WebGL / 小游戏 / 鸿蒙…）：
-- ZTS 版本或 commit：
+- ZenTS 版本或 commit：
 - 纯 JS 还是 TsProject：
 
 【现象】

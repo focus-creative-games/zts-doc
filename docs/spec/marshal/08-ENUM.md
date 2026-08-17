@@ -3,14 +3,14 @@ sidebar_position: 14
 title: "枚举 Marshal"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\08-ENUM.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\08-ENUM.md`）
 :::
 
 
 # 枚举 Marshal
 
 > **规范性：** C# `enum` 在 JavaScript 与 C# 之间的默认 Marshal 规则。
-> **相关：** 类型表常量 → [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §3.5；`zts.box` → [../05-LIB.md](../05-LIB.md)；`ref` enum → [03-BYREF.md](./03-BYREF.md)；`[TsMarshalAs]` → [02-MARSHAL-AS.md](./02-MARSHAL-AS.md)。
+> **相关：** 类型表常量 → [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §3.5；`zents.box` → [../05-LIB.md](../05-LIB.md)；`ref` enum → [03-BYREF.md](./03-BYREF.md)；`[JsMarshalAs]` → [02-MARSHAL-AS.md](./02-MARSHAL-AS.md)。
 
 **平台原则：** 枚举默认 **不** 推送 exotic，而按 **`number`（整数）** Marshal。**v1 禁止 bigint 通道**（[../00-OVERVIEW.md](../00-OVERVIEW.md) §1.3）。
 
@@ -21,7 +21,7 @@ title: "枚举 Marshal"
 | 场景 | 形态 |
 |------|------|
 | **默认传参** | **`number`**（`Number.isInteger`） |
-| **boxed 实例** | **ByObj exotic**；**仅** `zts.box` |
+| **boxed 实例** | **ByObj exotic**；**仅** `zents.box` |
 | **类型表常量** | **`number`** 属性（**非** exotic） |
 
 枚举类型对象 **无** `[[Construct]]`；**不可** `new EnumType(...)` 构造 ByVal。
@@ -50,9 +50,9 @@ title: "枚举 Marshal"
 |----------|------|-----|
 | `sbyte` … `ulong` | `number` 整数 | `number` 整数 + 范围校验 |
 
-Pop 越界 → **`throw Error('zts: …')`**。
+Pop 越界 → **`throw Error('zents: …')`**。
 
-**禁止 `bigint` Pop** → **`throw Error('zts: bigint is not supported for enum marshal')`**（或等价文案）。
+**禁止 `bigint` Pop** → **`throw Error('zents: bigint is not supported for enum marshal')`**（或等价文案）。
 
 ---
 
@@ -70,17 +70,17 @@ foo(1);   // 裸整型，须可转换为该 enum
 
 ---
 
-## 5. Boxed 形态（`zts.box`）
+## 5. Boxed 形态（`zents.box`）
 
 ```javascript
-const boxed = zts.box(Color, Color.Green);
-const boxed2 = zts.box(Color, 2);
+const boxed = zents.box(Color, Color.Green);
+const boxed2 = zents.box(Color, 2);
 ```
 
 | 项 | 说明 |
 |----|------|
 | 返回值 | **ByObj exotic**（boxed） |
-| 拆箱 | `zts.unbox(boxed)` → underlying **`number`** |
+| 拆箱 | `zents.unbox(boxed)` → underlying **`number`** |
 | **`ref Color`** | boxed 走临时槽路径（[03-BYREF.md](./03-BYREF.md)） |
 
 ---
@@ -91,13 +91,13 @@ const boxed2 = zts.box(Color, 2);
 |---------|------|
 | **OpaqueValue** | handle 地址 |
 | **integer `number`** | 临时槽 |
-| **`zts.box` 产物** | 临时槽 |
+| **`zents.box` 产物** | 临时槽 |
 
 C#→JS：`ref enum` 默认 **OpaqueValue**。
 
 ---
 
-## 7. `[TsMarshalAs]` 扩展
+## 7. `[JsMarshalAs]` 扩展
 
 | 标注 | by-val enum |
 |------|-------------|
@@ -114,13 +114,13 @@ C#→JS：`ref enum` 默认 **OpaqueValue**。
 |----|------|--------|-------|
 | 默认跨边界 | number | ByVal exotic | ByObj exotic |
 | `[[Construct]]` | **无** | 有 | 有 |
-| boxed | `zts.box` | box / ByVal | 构造 |
+| boxed | `zents.box` | box / ByVal | 构造 |
 
 ---
 
 ## 9. Mono / Il2Cpp 一致性
 
-默认 Push/Pop、常量、`zts.box`、范围校验、bigint 拒绝 — **须一致**。
+默认 Push/Pop、常量、`zents.box`、范围校验、bigint 拒绝 — **须一致**。
 
 ---
 

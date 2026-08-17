@@ -1,5 +1,5 @@
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`metatable\02-INDEX.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`metatable\02-INDEX.md`）
 :::
 
 ﻿---
@@ -19,11 +19,11 @@ title: "属性分派（get / set）"
 
 ECMAScript 属性访问与 Lua `__index` 不同：QuickJS 对 exotic object 走 `[[Get]]` / `[[Set]]` 内部算法，**不**保证提供「中间 table 再二次索引」的扩展点。
 
-ZTS 因此令 **field 与 method 统一** 由接收 `(receiver, key)` 的 indexer 分派（与 xLua `obj_indexer(obj, key)` 同构）。注册期将成员拆入三张普通 JS object（或 native 等价 map），运行时按固定顺序查表，**hot path 不**调用 C# `InstanceIndex` / `StaticTypeIndex`，也不将 key 转为 C# 字符串做反射字典查找。
+ZenTS 因此令 **field 与 method 统一** 由接收 `(receiver, key)` 的 indexer 分派（与 xLua `obj_indexer(obj, key)` 同构）。注册期将成员拆入三张普通 JS object（或 native 等价 map），运行时按固定顺序查表，**hot path 不**调用 C# `InstanceIndex` / `StaticTypeIndex`，也不将 key 转为 C# 字符串做反射字典查找。
 
-**严格 miss：** 未注册成员的读写均须 **`throw new Error('zts: …')`**（含键名），**禁止**对 CLR 绑定域静默返回 `undefined`（以免随后 `TypeError: … is not a function` 难以定位）。
+**严格 miss：** 未注册成员的读写均须 **`throw new Error('zents: …')`**（含键名），**禁止**对 CLR 绑定域静默返回 `undefined`（以免随后 `TypeError: … is not a function` 难以定位）。
 
-**与普通 JS 对象区分：** 对 **非 ZTS** 的普通 object，`obj.foo` miss 仍返回 `undefined`（标准语义）。仅 **CSharp 根对象、程序集对象、类型对象、CLR 实例 exotic object** 适用本文 strict miss 规则。
+**与普通 JS 对象区分：** 对 **非 ZenTS** 的普通 object，`obj.foo` miss 仍返回 `undefined`（标准语义）。仅 **CSharp 根对象、程序集对象、类型对象、CLR 实例 exotic object** 适用本文 strict miss 规则。
 
 ---
 
@@ -62,7 +62,7 @@ enum 静态常量若已作为 **number** 直接写在类型对象 `T` 上，则�
 | **可写字段** | setter function：`function(receiver, value) { … }` | `setter(receiver, value)` |
 | **无参可写 property** | 同上 | `setter(receiver, value)` |
 
-只写 property：仅出现在 `fieldSetterTable`；属性 get 在 `methodTable` 与 `fieldGetterTable` 均未命中、但 `fieldSetterTable` 命中时，报 **`zts: property has no getter: {key}`**（不得返回 `undefined`）。
+只写 property：仅出现在 `fieldSetterTable`；属性 get 在 `methodTable` 与 `fieldGetterTable` 均未命中、但 `fieldSetterTable` 命中时，报 **`zents: property has no getter: {key}`**（不得返回 `undefined`）。
 
 readonly 字段 / 只读 property：**不在**此表；写入时在 `fieldSetterTable` miss 后报错。
 
@@ -95,10 +95,10 @@ function getProperty(receiver, key) {
   }
 
   if (lookupOwn(fieldSetterTable, k) !== undefined) {
-    throw new Error(`zts: property has no getter: ${typeFullName}.${k}`);
+    throw new Error(`zents: property has no getter: ${typeFullName}.${k}`);
   }
 
-  throw new Error(`zts: member not found: ${typeFullName}.${k}`);
+  throw new Error(`zents: member not found: ${typeFullName}.${k}`);
 }
 ```
 
@@ -138,10 +138,10 @@ fn(a, b);
 | 调用形式 | `[[NeedsReceiver]]` 行为 |
 |----------|---------------------------|
 | `receiver.method(...)`（method call） | 注入 `receiver` 为 CLR this，再 marshal 其余参数 |
-| `method(...)`（`method` 为提取的引用） | **不**注入；若 `NeedsReceiver` → **`throw new Error('zts: method requires receiver: …')`** 或等价 |
-| `method.call(other, …)` / `apply` | 显式传入的 `thisArg` 若为合法 ZTS 实例 exotic object，用作 CLR this；否则按 marshal 规则校验 |
+| `method(...)`（`method` 为提取的引用） | **不**注入；若 `NeedsReceiver` → **`throw new Error('zents: method requires receiver: …')`** 或等价 |
+| `method.call(other, …)` / `apply` | 显式传入的 `thisArg` 若为合法 ZenTS 实例 exotic object，用作 CLR this；否则按 marshal 规则校验 |
 
-**与 ZLua 对照：** ZLua `obj:Method()` 冒号传 self；ZTS 用 **`obj.Method()`** 点号 + 方法调用检测达到同等效果。ZLua 提取 closure 不传 self 的行为与 ZTS 一致。
+**与 ZLua 对照：** ZLua `obj:Method()` 冒号传 self；ZenTS 用 **`obj.Method()`** 点号 + 方法调用检测达到同等效果。ZLua 提取 closure 不传 self 的行为与 ZenTS 一致。
 
 ### 3.3 静态类型对象（STO）
 
@@ -151,7 +151,7 @@ fn(a, b);
 - 使用 **静态** 三表（与实例三表 **不可共用**）。
 - static getter closure 按静态语义实现（无 instance GCHandle pop，静态 field 读类型静态数据段）。
 
-**STO 回退：** 三表均未命中时，查 STO **保留键**（如 struct 的 `_default` callable）。仍无则 **`throw new Error('zts: member not found: ' + typeFullName + '.' + key)`**。
+**STO 回退：** 三表均未命中时，查 STO **保留键**（如 struct 的 `_default` callable）。仍无则 **`throw new Error('zents: member not found: ' + typeFullName + '.' + key)`**。
 
 **类型对象直查：** 若 `key` 已存在于 `T` 本体（如 enum 常量 number），JS 引擎在触发分派 `[[Get]]` 之前即返回值；indexer 不负责这些键。
 
@@ -173,7 +173,7 @@ function setProperty(receiver, key, value) {
     return;
   }
 
-  throw new Error(`zts: instance member not writable: ${typeFullName}.${k}`);
+  throw new Error(`zents: instance member not writable: ${typeFullName}.${k}`);
 }
 ```
 
@@ -206,16 +206,16 @@ enum 常量、静态 readonly 字面量等不可写键：miss 后报错，与 C#
 
 ## 6. 错误消息约定
 
-所有消息 **`message` 须以 `zts:` 开头**（允许其后空格）。
+所有消息 **`message` 须以 `zents:` 开头**（允许其后空格）。
 
 | 场景 | 消息（示意） |
 |------|----------------|
-| 属性 get miss（无 getter / 无 method / STO 回退仍无） | `zts: member not found: {TypeFullName}.{key}` |
-| 属性 get 只写 property（仅 setter 表命中） | `zts: property has no getter: {TypeFullName}.{key}` |
-| 属性 set 无 setter / 不可写（实例） | `zts: instance member not writable: {TypeFullName}.{key}` |
-| 属性 set 无 setter / 不可写（静态） | `zts: static member not writable: {TypeFullName}.{key}` |
-| 提取实例方法调用缺 receiver | `zts: method requires receiver: {TypeFullName}.{methodName}` |
-| getter 内部类型错误 | bridge 抛出，保持 `zts:` 前缀 |
+| 属性 get miss（无 getter / 无 method / STO 回退仍无） | `zents: member not found: {TypeFullName}.{key}` |
+| 属性 get 只写 property（仅 setter 表命中） | `zents: property has no getter: {TypeFullName}.{key}` |
+| 属性 set 无 setter / 不可写（实例） | `zents: instance member not writable: {TypeFullName}.{key}` |
+| 属性 set 无 setter / 不可写（静态） | `zents: static member not writable: {TypeFullName}.{key}` |
+| 提取实例方法调用缺 receiver | `zents: method requires receiver: {TypeFullName}.{methodName}` |
+| getter 内部类型错误 | bridge 抛出，保持 `zents:` 前缀 |
 
 只读 property 写入、对 method 名赋值等，均归入上表「不可写」语义。
 
@@ -239,7 +239,7 @@ function bindIndexer(methodTable, fieldGetterTable, fieldSetterTable, typeFullNa
 
 ## 8. 与 `register_method` 的交互
 
-`zts.register_method`（及 Mono 等价 API）在运行时向目标类型的 method 表挂一个 **新的** 最终名 → **direct** function（完整规则见 `../04-METHOD-OVERLOAD.md` §6.1）。
+`zents.register_method`（及 Mono 等价 API）在运行时向目标类型的 method 表挂一个 **新的** 最终名 → **direct** function（完整规则见 `../04-METHOD-OVERLOAD.md` §6.1）。
 
 - `aliasName` **尚不存在** → 写入；之后属性 get 返回该 function。
 - `aliasName` **已存在**（单个方法或 overload 组）→ **throw**，不覆盖、不并入。
@@ -259,7 +259,7 @@ function bindIndexer(methodTable, fieldGetterTable, fieldSetterTable, typeFullNa
 - Bind 期继承扁平化；派生类覆盖基类同名键
 - **无** event 子对象；**无** 反射 fallback
 - **`obj.Method(args)`** 自动绑定 CLR `this`；提取 function **不**绑定
-- **`zts:`** 错误前缀
+- **`zents:`** 错误前缀
 
 性能与 GC 属于实现文档（`impl/metatable/`），不在本文范围。
 
@@ -272,6 +272,6 @@ function bindIndexer(methodTable, fieldGetterTable, fieldSetterTable, typeFullNa
 | CLR 绑定成员 miss | **throw**（§6）；**不是** `undefined` |
 | 将 `undefined` 写入可写 CLR 字段/property | 按 marshal 规则 Pop（见 `../marshal/`）；可能与 `null` 不同 |
 | 可选 C# 参数未传 | JS 侧为 `undefined`（marshal 分册） |
-| `typeof undeclaredVar` | 标准 JS `undefined`；与 ZTS 无关 |
+| `typeof undeclaredVar` | 标准 JS `undefined`；与 ZenTS 无关 |
 
 **禁止**实现为「CLR miss 返回 `undefined`」以兼容松散 JS 习惯。

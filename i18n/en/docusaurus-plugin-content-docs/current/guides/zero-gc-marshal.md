@@ -6,7 +6,7 @@ description: OpaqueValue、ByVal、UnpackedValues、string Object 等少分配 M
 
 # 少 GC Marshal
 
-本篇只谈 **少分配 / 零额外托管分配** 的常用 Marshal 手段。默认规则见 [Marshal 总览](/docs/spec/marshal/01-OVERVIEW/)；特性语法见 [TsMarshalAs](/docs/guides/ts-marshal-as/)。权威：[04-OPAQUE](/docs/spec/marshal/04-OPAQUE/)、[02-MARSHAL-AS](/docs/spec/marshal/02-MARSHAL-AS/)、[05-STRUCT](/docs/spec/marshal/05-STRUCT/)。
+本篇只谈 **少分配 / 零额外托管分配** 的常用 Marshal 手段。默认规则见 [Marshal 总览](/docs/spec/marshal/01-OVERVIEW/)；特性语法见 [JsMarshalAs](/docs/guides/js-marshal-as/)。权威：[04-OPAQUE](/docs/spec/marshal/04-OPAQUE/)、[02-MARSHAL-AS](/docs/spec/marshal/02-MARSHAL-AS/)、[05-STRUCT](/docs/spec/marshal/05-STRUCT/)。
 
 > 「少 GC / 0GC」指热路径上 **尽量不** 为这次互调新建 JS plain object / JS string / ByVal exotic / 装箱对象。并非整个程序永不 GC。
 
@@ -17,19 +17,19 @@ description: OpaqueValue、ByVal、UnpackedValues、string Object 等少分配 M
 | 场景 | 行为 |
 |------|------|
 | `ref` / `out` / `in T`（任意 T） | C#→JS **默认** Opaque，无需标注 |
-| by-val 任意 CLR 类型 | 可显式 `[TsMarshalAs(OpaqueValue)]`（**仅 C#→JS**） |
+| by-val 任意 CLR 类型 | 可显式 `[JsMarshalAs(OpaqueValue)]`（**仅 C#→JS**） |
 
 ```csharp
 public void Touch(ref Transform t) { }           // 默认 Opaque
-public void Peek([TsMarshalAs(TsMarshalType.OpaqueValue)] MyClass obj) { }
-public void PeekStruct([TsMarshalAs(TsMarshalType.OpaqueValue)] Vector3 v) { }
+public void Peek([JsMarshalAs(JsMarshalType.OpaqueValue)] MyClass obj) { }
+public void PeekStruct([JsMarshalAs(JsMarshalType.OpaqueValue)] Vector3 v) { }
 ```
 
 ```javascript
 // 在同一次 C#→JS 同步调用链内
-const v = zts.get_opaquevalue(slot);
-zts.set_opaquevalue(slot, newValue);
-// 需要 ByVal 门面时：zts.to_user_data(slot)（会产生 ByVal exotic，见规范）
+const v = zents.get_opaquevalue(slot);
+zents.set_opaquevalue(slot, newValue);
+// 需要 ByVal 门面时：zents.to_user_data(slot)（会产生 ByVal exotic，见规范）
 ```
 
 要点：
@@ -37,7 +37,7 @@ zts.set_opaquevalue(slot, newValue);
 - **引用类型**与 **struct** 都可走 Opaque，避免为本帧临时对象建完整 exotic
 - **不可**把 Opaque 存进跨帧 / 跨异步的长期表
 - JS→C# 单独形参上标 `OpaqueValue` **非法**；写回规则见 [ref/out/in](/docs/guides/ref-out-in/)
-- 失效后 → `throw Error('zts: invalid opaque parameter handle')`
+- 失效后 → `throw Error('zents: invalid opaque parameter handle')`
 
 ## 2. ByVal：struct 默认与真 ref
 
@@ -45,7 +45,7 @@ zts.set_opaquevalue(slot, newValue);
 |------|------|
 | 默认 by-val | 长生命周期常用 **ByVal exotic**（`new Type(...)`） |
 | `ref`/`out`/`in` + 同型 ByVal | **真 ref**，可写回 payload，无需 Opaque API |
-| `zts.to_user_data` | Opaque → **拷贝** ByVal（与原 handle 独立） |
+| `zents.to_user_data` | Opaque → **拷贝** ByVal（与原 handle 独立） |
 
 热路径若只需读字段一次，优先 Opaque；需要成员分派或长期持有再 ByVal。
 
@@ -55,7 +55,7 @@ zts.set_opaquevalue(slot, newValue);
 
 ```csharp
 public void ApplyForce(
-    [TsMarshalAs(TsMarshalType.UnpackedValues, Members = new[] { "x", "y", "z" })]
+    [JsMarshalAs(JsMarshalType.UnpackedValues, Members = new[] { "x", "y", "z" })]
     Vector3 force) { }
 ```
 
@@ -76,7 +76,7 @@ rb.ApplyForce(0, 9.8, 0);   // 三槽；JS 侧只有 number
 
 ```csharp
 public void ProcessHuge(
-    [TsMarshalAs(TsMarshalType.Object)] string payload) { }
+    [JsMarshalAs(JsMarshalType.Object)] string payload) { }
 ```
 
 标注后强制 **ByObj exotic**（托管 `System.String`），**不再**生成对应内容的 JS string。
@@ -101,7 +101,7 @@ ByObj exotic **仍会**在 JS 侧分配 exotic，参与 GC。只是避免「再�
 
 ## 相关文档
 
-- [TsMarshalAs](/docs/guides/ts-marshal-as/)
+- [JsMarshalAs](/docs/guides/js-marshal-as/)
 - [值类型](/docs/guides/value-types/)
 - [ref / out / in](/docs/guides/ref-out-in/)
 - [02-MARSHAL-AS](/docs/spec/marshal/02-MARSHAL-AS/) · [04-OPAQUE](/docs/spec/marshal/04-OPAQUE/)

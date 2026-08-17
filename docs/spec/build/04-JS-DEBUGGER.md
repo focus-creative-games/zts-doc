@@ -3,13 +3,13 @@ sidebar_position: 4
 title: "JS 调试器"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`build\04-JS-DEBUGGER.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`build\04-JS-DEBUGGER.md`）
 :::
 
 
 # 构建 — Editor Mono：JavaScript 调试器 Host Hook
 
-> 约定 ZTS **Editor（`ZTS.Mono`）** 如何暴露 **可插拔的 JS 调试 host hook**，使外部 IDE / 调试前端可对运行中的 **QuickJS** 脚本断点调试。
+> 约定 ZenTS **Editor（`ZenTS.Mono`）** 如何暴露 **可插拔的 JS 调试 host hook**，使外部 IDE / 调试前端可对运行中的 **QuickJS** 脚本断点调试。
 > **不是** EmmyLua / Lua 调试协议；**不**随包绑定某一专有 IDE。
 > **不**改变 JavaScript 可见互操作语义；**不**覆盖 Il2Cpp Player。
 > 异常边界见 [03-MONO-CALLBACK-GATE.md](./03-MONO-CALLBACK-GATE.md)；宿主入口见 [01-HOST-API.md](../01-HOST-API.md)；多版本见 [11-MULTI-VERSION.md](../11-MULTI-VERSION.md)。
@@ -22,10 +22,10 @@ title: "JS 调试器"
 
 | 项 | 约定 |
 |----|------|
-| 宿主 | Unity **Editor** + `ZTS.Mono`，域内 **单主 `JSContext`** |
-| 模型 | **Host Hook 契约**：ZTS 在固定生命周期点调用 `IZtsJsDebuggerHost`；具体 DAP / CDP / 自研协议由 **可选扩展包** 实现 |
-| 开关 | Project Settings（`ZTS.Settings`）显式开启；**默认关闭** |
-| 覆盖范围 | 业务 ES module（含 TS emit + source map → `TsProject/src`）、`CSharp` 绑定脚本、`zts` 标准库（在 hook 安装之后加载的代码） |
+| 宿主 | Unity **Editor** + `ZenTS.Mono`，域内 **单主 `JSContext`** |
+| 模型 | **Host Hook 契约**：ZenTS 在固定生命周期点调用 `IZenTSJsDebuggerHost`；具体 DAP / CDP / 自研协议由 **可选扩展包** 实现 |
+| 开关 | Project Settings（`ZenTS.Settings`）显式开启；**默认关闭** |
+| 覆盖范围 | 业务 ES module（含 TS emit + source map → `TsProject/src`）、`CSharp` 绑定脚本、`zents` 标准库（在 hook 安装之后加载的代码） |
 | QuickJS 能力 | 基于 **`JS_SetDebuggerHandler`** / 引擎调试 API（或等价 patch）实现断点、单步、栈；**不** fork QuickJS |
 
 ### 1.2 非目标
@@ -46,19 +46,19 @@ title: "JS 调试器"
 ```text
 IDE / 调试前端（可选扩展包：DAP Adapter 等）
     ↕ 调试协议（实现细节在扩展包，不在本 spec）
-IZtsJsDebuggerHost（Editor 可选实现）
+IZenTSJsDebuggerHost（Editor 可选实现）
     ↕ JS_SetDebuggerHandler / 断点 / 单步
 QuickJS JSContext（Editor Mono，单主上下文）
-    ↕ ZTS 绑定层（须经 callback gate）
-业务脚本 + CSharp + zts
+    ↕ ZenTS 绑定层（须经 callback gate）
+业务脚本 + CSharp + zents
 ```
 
 | 层 | 职责 |
 |----|------|
 | **Settings** | `enableJsDebugger`、`debuggerHostType`、端口 / 路径等 |
-| **`TsMonoAppDomain.Initialize`** | 完成 QuickJS + ZTS 核心初始化后，若开启则 `JsDebuggerBootstrap.Start` |
-| **`JsDebuggerBootstrap`** | 反射创建 `IZtsJsDebuggerHost` 实现；调用 `Install(ctx, rt)` |
-| **扩展包** | 实现 `IZtsJsDebuggerHost`；注册 TCP / Unix socket / stdio 等传输 |
+| **`JsMonoAppDomain.Initialize`** | 完成 QuickJS + ZenTS 核心初始化后，若开启则 `JsDebuggerBootstrap.Start` |
+| **`JsDebuggerBootstrap`** | 反射创建 `IZenTSJsDebuggerHost` 实现；调用 `Install(ctx, rt)` |
+| **扩展包** | 实现 `IZenTSJsDebuggerHost`；注册 TCP / Unix socket / stdio 等传输 |
 
 ---
 
@@ -67,17 +67,17 @@ QuickJS JSContext（Editor Mono，单主上下文）
 ### 3.1 接口
 
 ```csharp
-namespace ZTS.Editor.Diagnostics
+namespace ZenTS.Editor.Diagnostics
 {
     /// <summary>
     /// Editor 可选 JS 调试宿主。实现位于扩展程序集，由 Settings 指定类型全名。
     /// </summary>
-    public interface IZtsJsDebuggerHost
+    public interface IZenTSJsDebuggerHost
     {
         /// <summary>在任意 gated JS→C# 回调注册之前或之后均可，但不得早于 JSContext 创建。</summary>
         void Install(JSRuntimeHandle rt, JSContextHandle ctx, JsDebuggerHostContext hostContext);
 
-        /// <summary>TsAppDomain.Reset 触发的 teardown 之前调用。</summary>
+        /// <summary>JsAppDomain.Reset 触发的 teardown 之前调用。</summary>
         void Uninstall();
 
         /// <summary>每 Editor 帧可选 tick（处理 pending 断点消息等）。</summary>
@@ -98,11 +98,11 @@ namespace ZTS.Editor.Diagnostics
 
 ### 3.2 生命周期（硬顺序）
 
-在 `TsMonoAppDomain.Initialize` 中，于下列步骤 **全部完成之后** 再 `Install`：
+在 `JsMonoAppDomain.Initialize` 中，于下列步骤 **全部完成之后** 再 `Install`：
 
 1. 创建 `JSRuntime` + 主 `JSContext`
 2. `JsCallbackGate.EnsureInitialized()`
-3. 注册 `zts` 标准库与 `CSharp` 根对象
+3. 注册 `zents` 标准库与 `CSharp` 根对象
 4. 安装 ES **`moduleLoader`**（`JS_SetModuleLoaderFunc`）
 5. `ObjectRegistry` / `TypeRegistry` 就绪
 
@@ -121,12 +121,12 @@ namespace ZTS.Editor.Diagnostics
 
 ### 3.4 Settings 字段
 
-在 `ZTS.Settings`（`ProjectSettings/ZTS.asset`）：
+在 `ZenTS.Settings`（`ProjectSettings/ZenTS.asset`）：
 
 | 字段 | 类型 | 默认 | 说明 |
 |------|------|------|------|
 | `enableJsDebugger` | `bool` | **`false`** | 为 true 时在 `Initialize` 末尾启动 |
-| `debuggerHostTypeName` | `string` | `""` | 实现 `IZtsJsDebuggerHost` 的类型全名（含程序集） |
+| `debuggerHostTypeName` | `string` | `""` | 实现 `IZenTSJsDebuggerHost` 的类型全名（含程序集） |
 | `debuggerPort` | `int` | **`9230`** | 建议端口；扩展包可忽略 |
 | `debuggerWaitForAttach` | `bool` | **`false`** | 为 true 时 `Install` 后阻塞直到前端 attach（**须**有超时或 UI 取消，避免死锁 Unity 主线程） |
 | `debuggerSourcePaths` | `string[]` | `Assets/` | 额外源码搜索路径 |
@@ -165,27 +165,27 @@ UI 须标明：**仅 Editor Mono**；`WaitForAttach` 会阻塞主线程。
 | Editor only | Player 平台 **enabled: 0** |
 | 不与 `quickjs.dll` 双载 | 扩展包 native 模块 **不得** 静态嵌入第二份 QuickJS |
 
-ZTS 核心包 **不** 随包附带具体调试 frontend 二进制。
+ZenTS 核心包 **不** 随包附带具体调试 frontend 二进制。
 
 ---
 
 ## 6. 推荐扩展包结构（信息性）
 
 ```
-Packages/com.code-philosophy.zts.debugger.dap/   # 示例，非本仓库必需
+Packages/com.code-philosophy.zen-ts.debugger.dap/   # 示例，非本仓库必需
 ├── Editor/
-│   └── DapJsDebuggerHost.cs    # IZtsJsDebuggerHost
+│   └── DapJsDebuggerHost.cs    # IZenTSJsDebuggerHost
 └── README.md                   # VS Code launch.json 示例
 ```
 
-扩展包 **须** 引用 `ZTS.Mono` / `ZTS.Editor` 中的 hook 接口，**不得** 修改 `spec/**` 语义。
+扩展包 **须** 引用 `ZenTS.Mono` / `ZenTS.Editor` 中的 hook 接口，**不得** 修改 `spec/**` 语义。
 
 ---
 
 ## 7. 启动流程（伪码）
 
 ```csharp
-void TsMonoAppDomain.Initialize(...)
+void JsMonoAppDomain.Initialize(...)
 {
     // ... core init through moduleLoader ...
     if (ZtsSettings.Instance.enableJsDebugger)
@@ -198,14 +198,14 @@ static class JsDebuggerBootstrap
     {
         var typeName = ZtsSettings.Instance.debuggerHostTypeName;
         if (string.IsNullOrEmpty(typeName)) { LogError(...); return; }
-        var host = (IZtsJsDebuggerHost)Activator.CreateInstance(Type.GetType(typeName));
+        var host = (IZenTSJsDebuggerHost)Activator.CreateInstance(Type.GetType(typeName));
         host.Install(rt, ctx, BuildContext());
         _active = host;
     }
 }
 ```
 
-`TsFramePump` 每帧调用 `_active?.Tick()`（若存在）。
+`JsFramePump` 每帧调用 `_active?.Tick()`（若存在）。
 
 ---
 

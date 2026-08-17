@@ -3,7 +3,7 @@ sidebar_position: 11
 title: "Struct Marshal"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\05-STRUCT.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\05-STRUCT.md`）
 :::
 
 
@@ -23,7 +23,7 @@ title: "Struct Marshal"
 | 零拷贝（默认 Handle） | struct 在桥接栈帧上时，C#→JS 可 Push OpaqueValue handle |
 | 安全 | JS **不持有** struct 裸地址；过期访问 **throw** |
 | 统一 | struct 与 class 同样走 `CSharp.*`、`obj.Method()` |
-| 可显式选择 | `[TsMarshalAs]`：`Object`、`Table`、`UnpackedValues`、`OpaqueValue` |
+| 可显式选择 | `[JsMarshalAs]`：`Object`、`Table`、`UnpackedValues`、`OpaqueValue` |
 
 **术语：**
 
@@ -61,9 +61,9 @@ title: "Struct Marshal"
 |------|----------|----------|----------|
 | **OpaqueValue** | C#→JS by-val（同步）或 **byref** 默认 | **不可** `.` 成员；须 get/set 或 `to_user_data` | 仅本次 C#→JS 调用 |
 | **ByVal exotic** | Push 拷贝、`new Type(...)`、`to_user_data` | **ByVal IEO** | JS GC + Registry |
-| **ByObj exotic** | box 路径、`zts.box` | **ByObj IEO** | `ObjectRegistry` GC root |
+| **ByObj exotic** | box 路径、`zents.box` | **ByObj IEO** | `ObjectRegistry` GC root |
 
-**互转：** `zts.to_user_data(opaque)` **拷贝** 为 ByVal exotic，与原 opaque 独立。
+**互转：** `zents.to_user_data(opaque)` **拷贝** 为 ByVal exotic，与原 opaque 独立。
 
 ---
 
@@ -92,7 +92,7 @@ title: "Struct Marshal"
 | box / `object` 形参 | **ByObj exotic** |
 | 显式 ByVal / blittable 拷贝 | **ByVal exotic** |
 | 同步链 by-val 默认 | **OpaqueValue** 或 ByVal（实现策略须两平台一致） |
-| `[TsMarshalAs(OpaqueValue)]` on by-val | **OpaqueValue** |
+| `[JsMarshalAs(OpaqueValue)]` on by-val | **OpaqueValue** |
 
 ---
 
@@ -133,7 +133,7 @@ console.assert(p.x === 11);
 
 规则以 [02-MARSHAL-AS.md §5–§6](./02-MARSHAL-AS.md) 为准。
 
-| `TsMarshalType` | JS → C# | C# → JS |
+| `JsMarshalType` | JS → C# | C# → JS |
 |-----------------|---------|---------|
 | **`UnpackedValues`** | 连续 N 实参 | **Array** 长度 N（或 bridge 约定） |
 | **`Table`** | plain object；Nullable 无值 → `null`/`undefined` | plain object；无值 → **`null`** |
@@ -141,7 +141,7 @@ console.assert(p.x === 11);
 类型级示例：
 
 ```csharp
-[TsMarshalAs(TsMarshalType.Table, Members = new[] { "X", "Y" })]
+[JsMarshalAs(JsMarshalType.Table, Members = new[] { "X", "Y" })]
 public struct Vector2 { public float X; public float Y; }
 ```
 
@@ -153,13 +153,13 @@ public struct Vector2 { public float X; public float Y; }
 
 ---
 
-## 9. `zts.box` / `zts.unbox` / `zts.cast`
+## 9. `zents.box` / `zents.unbox` / `zents.cast`
 
 | API | struct 语义 |
 |-----|-------------|
-| **`zts.box(typeArg, value)`** | 装箱 → **ByObj exotic** |
-| **`zts.unbox(boxed)`** | ByObj → **ByVal exotic** 或标量 |
-| **`zts.cast(obj, targetType)`** | 引用门面；struct 见 [06-CLASS.md](./06-CLASS.md) |
+| **`zents.box(typeArg, value)`** | 装箱 → **ByObj exotic** |
+| **`zents.unbox(boxed)`** | ByObj → **ByVal exotic** 或标量 |
+| **`zents.cast(obj, targetType)`** | 引用门面；struct 见 [06-CLASS.md](./06-CLASS.md) |
 
 **`unbox` 不接受** ByVal exotic → **throw**。
 
@@ -172,7 +172,7 @@ public struct Vector2 { public float X; public float Y; }
   Push OpaqueValue(h) → JS_Call 回调
   C# 返回 → h 失效
 
-需长期持有 → zts.to_user_data(h) 或 ByVal exotic 路径
+需长期持有 → zents.to_user_data(h) 或 ByVal exotic 路径
 ```
 
 | 形态 | 失效 |
@@ -211,8 +211,8 @@ Blittable：仅 `memcpy` 到 payload。
 | 主题 | 文档 |
 |------|------|
 | 默认矩阵 | [01-OVERVIEW.md](./01-OVERVIEW.md) |
-| `[TsMarshalAs]` | [02-MARSHAL-AS.md](./02-MARSHAL-AS.md) |
+| `[JsMarshalAs]` | [02-MARSHAL-AS.md](./02-MARSHAL-AS.md) |
 | byref / Opaque | [03-BYREF.md](./03-BYREF.md)、[04-OPAQUE.md](./04-OPAQUE.md) |
 | 枚举 | [08-ENUM.md](./08-ENUM.md) |
-| `zts.*` | [../05-LIB.md](../05-LIB.md) |
+| `zents.*` | [../05-LIB.md](../05-LIB.md) |
 | 类型对象 | [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §3.7 |

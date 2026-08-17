@@ -3,17 +3,17 @@ sidebar_position: 5
 title: "第三方原生模块"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`build\05-NATIVE-MODULES.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`build\05-NATIVE-MODULES.md`）
 :::
 
 
 # 构建 — QuickJS 原生 C 模块
 
-> 约定游戏工程如何把 **非 ZTS 随附** 的 QuickJS **C 扩展模块**（如自定义 `js_init_module_*`、第三方 `.c` 库）接到 ZTS。
-> **不**把具体第三方库 vendoring 进 `com.code-philosophy.zts`。
+> 约定游戏工程如何把 **非 ZenTS 随附** 的 QuickJS **C 扩展模块**（如自定义 `js_init_module_*`、第三方 `.c` 库）接到 ZenTS。
+> **不**把具体第三方库 vendoring 进 `com.code-philosophy.zen-ts`。
 > 引擎构建见 [01-QUICKJS.md](./01-QUICKJS.md)；多版本见 [11-MULTI-VERSION.md](../11-MULTI-VERSION.md)；宿主见 [01-HOST-API.md](../01-HOST-API.md)。
-> ES 业务模块仍走 **`moduleLoader`**；**`csharp:`** 类型模块由 ZTS 运行时拦截（[02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §2.11），**不是** 本文的第三方 C 扩展。
-> 本文只讨论 **非 ZTS 随附** 的原生 C / 内置 module 路径。
+> ES 业务模块仍走 **`moduleLoader`**；**`csharp:`** 类型模块由 ZenTS 运行时拦截（[02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §2.11），**不是** 本文的第三方 C 扩展。
+> 本文只讨论 **非 ZenTS 随附** 的原生 C / 内置 module 路径。
 
 ---
 
@@ -44,7 +44,7 @@ title: "第三方原生模块"
 | 能力 | 行为 |
 |------|------|
 | QuickJS 标准 | `quickjs-libc` 提供 **`js_init_module_std`** / **`js_init_module_os`** 参考 |
-| ZTS 宿主 loader | C# **`moduleLoader`** 返回 **ES module 源码**（string / byte[]） |
+| ZenTS 宿主 loader | C# **`moduleLoader`** 返回 **ES module 源码**（string / byte[]） |
 | 公共 `RegisterNativeModule` API | **当前无**；产品化钩子见 §6 |
 | Editor 调试 hook | 见 [04-JS-DEBUGGER.md](./04-JS-DEBUGGER.md)；**不是** C 模块 |
 
@@ -71,9 +71,9 @@ void JS_SetModuleLoaderFunc2(JSRuntime *rt,
 | **`module_init`** | 模块命名空间初始化（可选） |
 | **`module_check_attributes`** | import attributes 校验（QuickJS 新版本；可选） |
 
-ZTS **`TsAppDomain.Initialize`** 安装的 loader 链（概念顺序）：
+ZenTS **`JsAppDomain.Initialize`** 安装的 loader 链（概念顺序）：
 
-1. **`csharp:`** — ZTS 保留；合成 CLR 类型模块（[02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §2.11）
+1. **`csharp:`** — ZenTS 保留；合成 CLR 类型模块（[02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §2.11）
 2. **原生 C 模块** — 本文；`js_init_module_*` 或并列 loader
 3. 宿主 **`moduleLoader`** — 业务 JS/TS 源码
 
@@ -102,7 +102,7 @@ import { bar } from "foo";
 - **`js_module_loader`** — 磁盘 JSON / ES module 加载参考
 - **`js_init_module_std`** / **`js_init_module_os`**
 
-ZTS **默认不** 暴露完整 `qjs` CLI 磁盘搜索路径；若工程需要 **`std`** / **`os`** 模块，须在 Install / 启动期 **显式** `js_init_module_*`（Player）或扩展 Editor loader（§3）。
+ZenTS **默认不** 暴露完整 `qjs` CLI 磁盘搜索路径；若工程需要 **`std`** / **`os`** 模块，须在 Install / 启动期 **显式** `js_init_module_*`（Player）或扩展 Editor loader（§3）。
 
 ---
 
@@ -111,7 +111,7 @@ ZTS **默认不** 暴露完整 `qjs` CLI 磁盘搜索路径；若工程需要 **
 | 形态 | 宿主 | 加载 |
 |------|------|------|
 | A 纯 ES module | Editor + Player | `moduleLoader(specifier)` → 编译 ES module |
-| **`csharp:` 类型模块** | Editor + Player | ZTS 拦截；**不** 经 `moduleLoader`；见类型系统 §2.11 |
+| **`csharp:` 类型模块** | Editor + Player | ZenTS 拦截；**不** 经 `moduleLoader`；见类型系统 §2.11 |
 | B 原生动态 | **仅 Editor Mono** | 独立 `.dll/.so` 导出 `js_init_module_*` → 自定义 loader 或 `dlsym` 桥 |
 | C 原生静态 | **Il2Cpp Player**（Editor 亦可链入 `quickjs.dll`） | `.c/.cpp` 编入 libil2cpp → 启动期 `js_init_module_*` |
 | D 内置到 `quickjs.dll` | Editor | 与 Editor `quickjs` 同库编译 `js_init_module_*` |
@@ -125,7 +125,7 @@ ZTS **默认不** 暴露完整 `qjs` CLI 磁盘搜索路径；若工程需要 **
 ### 4.1 布局
 
 ```text
-<project>/zts-native-modules/
+<project>/zents-native-modules/
   quickjs-2026-06-04/
     win32-x64/myaddon.dll
     darwin-universal/myaddon.dylib
@@ -140,17 +140,17 @@ ZTS **默认不** 暴露完整 `qjs` CLI 磁盘搜索路径；若工程需要 **
 
 ### 4.3 注册时机
 
-在 **`TsMonoAppDomain.Initialize`** 完成且 **标准 ZTS _globals 已注册** 之后：
+在 **`JsMonoAppDomain.Initialize`** 完成且 **标准 ZenTS _globals 已注册** 之后：
 
 1. 解析当前 **`quickjsVersionId`** 与 OS，定位 native 模块目录；
 2. 对每个模块：`GetProcAddress("js_init_module_<name>")` 或静态已知符号；
-3. 将 **`module_loader`** 链入：`csharp:` 已由 ZTS 处理；若 specifier 匹配原生模块则调用对应 `js_init_module_*`；否则 **fallback** 到托管 `moduleLoader`；
+3. 将 **`module_loader`** 链入：`csharp:` 已由 ZenTS 处理；若 specifier 匹配原生模块则调用对应 `js_init_module_*`；否则 **fallback** 到托管 `moduleLoader`；
 4. **禁止** fallback 静默吞掉 loader 错误。
 
 ### 4.4 链接约束
 
 - 插件 **禁止** 静态嵌入第二份 QuickJS VM。
-- 导出符号命名须与 QuickJS 模块惯例一致，或经 ZTS 注册表映射 specifier → init 函数。
+- 导出符号命名须与 QuickJS 模块惯例一致，或经 ZenTS 注册表映射 specifier → init 函数。
 
 ---
 
@@ -163,11 +163,11 @@ ZTS **默认不** 暴露完整 `qjs` CLI 磁盘搜索路径；若工程需要 **
 - 将插件 `.c/.cpp` 编入与 **`libil2cpp/quickjs`** 相同的编译单元列表（经 Install 后的 Local 树）；或
 - 提供平台静态库（`.a` / `.lib`），在链接阶段并入 `GameAssembly` / `libil2cpp`。
 
-须与 Install 选定的 **`quickjsVersionId`** 及 **`ZTS_QUICKJS`** Define 一致。
+须与 Install 选定的 **`quickjsVersionId`** 及 **`ZENTS_QUICKJS`** Define 一致。
 
 ### 5.2 注册时机
 
-在创建主 **`JSContext`** 之后、执行业务脚本 **之前**（概念上紧接 `ZTSLib::RegisterGlobals` 之后）：
+在创建主 **`JSContext`** 之后、执行业务脚本 **之前**（概念上紧接 `ZenTSLib::RegisterGlobals` 之后）：
 
 ```cpp
 JSModuleDef *m = js_init_module_myaddon(ctx, "myaddon");
@@ -191,7 +191,7 @@ NativeModuleBootstrap.Install(versionId, moduleTable)
   Player  → 空操作（注册已在 native 完成）或断言 module namespace
 ```
 
-生命周期：`TsAppDomain.Initialize(moduleLoader)` → **`NativeModuleBootstrap`** → 业务 `import`。
+生命周期：`JsAppDomain.Initialize(moduleLoader)` → **`NativeModuleBootstrap`** → 业务 `import`。
 
 纯 JS 模块 **一律** 走同一 **`moduleLoader`**，保证 Editor/Player 路径一致。
 
@@ -202,8 +202,8 @@ NativeModuleBootstrap.Install(versionId, moduleTable)
 | 侧 | 建议 |
 |----|------|
 | Mono | Settings 列表：`nativeModuleSearchPaths`；Initialize 后合并 loader |
-| Il2Cpp | `RegisterGlobals` 之后弱符号或生成表（如 `ZTSNativeModules.inc`）调用各 `js_init_module_*` |
-| Settings | 与 `tsAliasXmlPaths` 类似的路径约定字段（可选） |
+| Il2Cpp | `RegisterGlobals` 之后弱符号或生成表（如 `ZenTSNativeModules.inc`）调用各 `js_init_module_*` |
+| Settings | 与 `jsAliasXmlPaths` 类似的路径约定字段（可选） |
 
 **仍不** 默认 vendoring 任何第三方库源码或二进制。
 
@@ -227,7 +227,7 @@ NativeModuleBootstrap.Install(versionId, moduleTable)
 - [ ] PluginImporter Player 均为 disabled（形态 B）
 - [ ] 切换 `quickjsVersionId` 后旧二进制不可用且有 **明确** 失败，而非静默 ABI 错乱
 - [ ] 插件未静态嵌入第二份 QuickJS
-- [ ] 原生模块 **不** 绕过 [callback gate](./03-MONO-CALLBACK-GATE.md) 暴露新 JS→C# 入口（若模块内再调 C#，仍须 ZTS 绑定层）
+- [ ] 原生模块 **不** 绕过 [callback gate](./03-MONO-CALLBACK-GATE.md) 暴露新 JS→C# 入口（若模块内再调 C#，仍须 ZenTS 绑定层）
 
 ---
 

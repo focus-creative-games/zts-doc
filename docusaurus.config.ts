@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'ZTS 文档',
+  title: 'ZenTS 文档',
   tagline: '零配置 · 完备 C# 互操作 · QuickJS 上的 TypeScript / JavaScript',
 
   favicon: 'img/logo.jpg',
@@ -13,12 +13,12 @@ const config: Config = {
     v4: false,
   },
 
-  url: 'https://zts.code-philosophy.com',
+  url: 'https://zen-ts.com',
   baseUrl: '/',
   trailingSlash: true,
 
   organizationName: 'focus-creative-games',
-  projectName: 'zts-doc',
+  projectName: 'zen-ts-doc',
 
   onBrokenLinks: 'throw',
 
@@ -58,7 +58,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/focus-creative-games/zts-doc/tree/main/',
+          editUrl: 'https://github.com/focus-creative-games/zen-ts-doc/tree/main/',
           numberPrefixParser: false,
         },
         blog: false,
@@ -75,9 +75,9 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'ZTS 文档',
+      title: 'ZenTS 文档',
       logo: {
-        alt: 'ZTS Logo',
+        alt: 'ZenTS Logo',
         src: 'img/logo.jpg',
       },
       items: [
@@ -98,12 +98,12 @@ const config: Config = {
           position: 'right',
         },
         {
-          href: 'https://github.com/focus-creative-games/zts-demo',
+          href: 'https://github.com/focus-creative-games/zen-ts-demo',
           label: 'Demo',
           position: 'right',
         },
         {
-          href: 'https://github.com/focus-creative-games/zts',
+          href: 'https://github.com/focus-creative-games/zen-ts',
           label: 'GitHub',
           position: 'right',
         },
@@ -127,7 +127,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub Issues',
-              href: 'https://github.com/focus-creative-games/zts/issues',
+              href: 'https://github.com/focus-creative-games/zen-ts/issues',
             },
             {label: 'Contact & FAQ', to: '/docs/community/contact/'},
           ],
@@ -136,12 +136,12 @@ const config: Config = {
           title: 'More',
           items: [
             {
-              label: 'ZTS source',
-              href: 'https://github.com/focus-creative-games/zts',
+              label: 'ZenTS source',
+              href: 'https://github.com/focus-creative-games/zen-ts',
             },
             {
               label: 'Demo project',
-              href: 'https://github.com/focus-creative-games/zts-demo',
+              href: 'https://github.com/focus-creative-games/zen-ts-demo',
             },
             {
               label: 'ZLua docs',
@@ -154,7 +154,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Code Philosophy. ZTS is MIT-licensed.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Code Philosophy. ZenTS is MIT-licensed.`,
     },
     prism: {
       theme: prismThemes.github,

@@ -3,7 +3,7 @@ sidebar_position: 6
 title: "生命周期与 GC"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`10-LIFETIME.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`10-LIFETIME.md`）
 :::
 
 
@@ -21,8 +21,8 @@ title: "生命周期与 GC"
 | **JS 语义优先** | 托管对象存活须与 JS exotic / ref 生命周期一致 |
 | **Il2Cpp GC 集成** | ByObj 槽位数组注册 **GC root**；non-blittable struct 须扫描 struct 内存 |
 | **Opaque 临时性** | 仅同步 C#→JS 调用帧内有效；**禁止**持久化 |
-| **单主上下文** | 默认 **`JSRuntime` + 域内一个主 `JSContext`**；ref 释放经 **`TsFramePump`** 批量处理 |
-| **异常可预测** | C# 异常 ↔ JS `Error` 在边界统一转换（`zts:` 前缀） |
+| **单主上下文** | 默认 **`JSRuntime` + 域内一个主 `JSContext`**；ref 释放经 **`JsFramePump`** 批量处理 |
+| **异常可预测** | C# 异常 ↔ JS `Error` 在边界统一转换（`zents:` 前缀） |
 
 Mono 与 Il2Cpp **对外行为一致**；内部机制可不同（GCHandle vs `Il2CppObject*`）。
 
@@ -60,7 +60,7 @@ C# 返回对象 → Push → exotic (slot 注册 + root 保活)
   → 若无其它 C# 引用：对象可被 Il2Cpp GC
 ```
 
-**注意：** exotic 释放 **不** 保证立即运行 C# 终结器；仅解除 ZTS 的 root 保活。
+**注意：** exotic 释放 **不** 保证立即运行 C# 终结器；仅解除 ZenTS 的 root 保活。
 
 ### 2.4 Shutdown
 
@@ -103,7 +103,7 @@ Mono 使用 `GCHandle` / boxed 等等价机制，**同一 JS 可见语义**。
 
 | 项 | 规则 |
 |----|------|
-| 产生 | C#→JS：`GetFunction` delegate、`JsMethod` bridge、标注 `[TsMarshalAs(OpaqueValue)]` |
+| 产生 | C#→JS：`GetFunction` delegate、`JsMethod` bridge、标注 `[JsMarshalAs(OpaqueValue)]` |
 | 形态 | opaque internal handle / exotic（**无** 三表成员分派） |
 | 有效 | **仅** 产生它的那次 C#→JS 调用 **尚未返回** |
 | 失效 | C# 返回后；或 `OpaqueParameterScope` generation 推进 |
@@ -114,7 +114,7 @@ Mono 使用 `GCHandle` / boxed 等等价机制，**同一 JS 可见语义**。
 - 对 opaque 使用 `.` 成员访问
 - 假定 handle 跨帧仍有效
 
-失效后 → **`throw Error('zts: invalid opaque parameter handle')`**。
+失效后 → **`throw Error('zents: invalid opaque parameter handle')`**。
 
 ### 4.3 与 Registry 的区别
 
@@ -130,7 +130,7 @@ Mono 使用 `GCHandle` / boxed 等等价机制，**同一 JS 可见语义**。
 
 ### 5.1 JS → C# delegate
 
-隐式或 `zts.to_delegate` 创建 delegate exotic 时：
+隐式或 `zents.to_delegate` 创建 delegate exotic 时：
 
 - native 持有 **JS function ref**（内部 registry / 等价机制）
 - C# 持有 delegate → 脚本 function 保活
@@ -142,7 +142,7 @@ C# delegate 传入 JS 后可直接 `d(...)`（`[[Call]]`）。若 C# 侧不再�
 
 ### 5.3 帧泵
 
-`TsAppDomain.ProcessPendingRefReleases()`（**`TsFramePump`** 驱动）处理延迟 unref 队列。**须在 Unity 主线程、与 JS 调用同线程** 执行（[01-HOST-API.md](./01-HOST-API.md) §1.4）。
+`JsAppDomain.ProcessPendingRefReleases()`（**`JsFramePump`** 驱动）处理延迟 unref 队列。**须在 Unity 主线程、与 JS 调用同线程** 执行（[01-HOST-API.md](./01-HOST-API.md) §1.4）。
 
 ---
 
@@ -150,9 +150,9 @@ C# delegate 传入 JS 后可直接 `d(...)`（`[[Call]]`）。若 C# 侧不再�
 
 ### 6.1 默认模型
 
-ZTS 宿主默认使用 **`JSRuntime` + 域内一个主 `JSContext`**：
+ZenTS 宿主默认使用 **`JSRuntime` + 域内一个主 `JSContext`**：
 
-- 全局 **`CSharp`**、**`zts`**、Registry 缓存、ES module loader 均绑定该上下文
+- 全局 **`CSharp`**、**`zents`**、Registry 缓存、ES module loader 均绑定该上下文
 - **不支持** 多线程并发无锁访问同一 context
 
 ### 6.2 调用线程
@@ -171,27 +171,27 @@ JS **`async`/`await`** 或 Promise 回调中 **不得** 使用已失效的 Opaqu
 
 ## 7. 初始化与整域 Reset 顺序
 
-宿主公开 API：**`TsAppDomain.Initialize` / `Reset`**（**无** 公开 `Shutdown`）。
+宿主公开 API：**`JsAppDomain.Initialize` / `Reset`**（**无** 公开 `Shutdown`）。
 
 ### 7.1 Initialize（概念）
 
 ```
 1. 创建 JSRuntime + 主 JSContext
-2. ZTSLib::RegisterGlobals（zts 内部 hook）
-3. 加载 ztslib.js
+2. ZenTSLib::RegisterGlobals（zents 内部 hook）
+3. 加载 zentslib.js
 4. ObjectRegistry::Initialize
 5. TypeRegistry / MetaBinding / Opaque scope 初始化
 6. 创建全局 CSharp 根对象
 7. 安装 ES module loader（`csharp:` 类型模块 → 原生 C 模块 → 宿主 `moduleLoader` / `GetFunction`）
 8. （Il2Cpp）RegisterPushRootCallback for struct roots
-9. 注册 TsFramePump
+9. 注册 JsFramePump
 ```
 
 已存在主 context 时再次 `Initialize` → **抛 C# 异常**（须 `Reset`）。
 
 ### 7.2 Reset（概念）
 
-`Reset(loader)` **先预约**，在本帧 **EndOfFrame** 由 **`TsFramePump`** 真正执行：
+`Reset(loader)` **先预约**，在本帧 **EndOfFrame** 由 **`JsFramePump`** 真正执行：
 
 ```
 调用当下：
@@ -217,7 +217,7 @@ Il2Cpp：**进程级** Bridge / XML 表 / InternalCall **保留**；仅重建 st
 
 | 事件 | 行为 |
 |------|------|
-| JS `throw` | 捕获为 C# 异常（`TsException` 或包装类型） |
+| JS `throw` | 捕获为 C# 异常（`JsScriptException` 或包装类型） |
 | JS 栈不平衡 | native 断言 / 异常 |
 | C# 异常穿过 native | **禁止** 泄漏；边界 translate 或 rethrow |
 
@@ -227,14 +227,14 @@ Il2Cpp：**进程级** Bridge / XML 表 / InternalCall **保留**；仅重建 st
 
 | 事件 | 行为 |
 |------|------|
-| C# 抛异常 | 转换为 **`throw new Error('zts: …')`**；Mono / Il2Cpp 文案一致或等价 |
+| C# 抛异常 | 转换为 **`throw new Error('zents: …')`**；Mono / Il2Cpp 文案一致或等价 |
 | 脚本 | `try/catch` 捕获 |
 
 **Editor Mono：** 不得在托管 reverse-P/Invoke 帧内直接 **`JS_Throw`** 未包装路径；须经 **native callback gate**（实现见 `impl/MONO.md`）。Il2Cpp 遵守 QuickJS 与 C++ 析构约束。
 
 ### 8.3 错误消息
 
-Bind 失败、marshal 失败、重载无匹配、opaque 无效、成员 miss 等，Mono 与 Il2Cpp **须** 对同一条件给出等价文案（**`zts:`** 前缀）。
+Bind 失败、marshal 失败、重载无匹配、opaque 无效、成员 miss 等，Mono 与 Il2Cpp **须** 对同一条件给出等价文案（**`zents:`** 前缀）。
 
 ---
 
@@ -245,7 +245,7 @@ flowchart TB
     subgraph JsGC["JS 引擎 GC / 句柄释放"]
         UD[exotic 释放]
     end
-    subgraph ZTS["ZTS Registry"]
+    subgraph ZenTS["ZenTS Registry"]
         OR[ObjectRegistry Unregister]
         SR[StructRegistry Release]
     end
@@ -272,7 +272,7 @@ flowchart TB
 
 | 文档 | 内容 |
 |------|------|
-| [01-HOST-API.md](./01-HOST-API.md) | `GetFunction`、`Reset`、`TsFramePump` |
+| [01-HOST-API.md](./01-HOST-API.md) | `GetFunction`、`Reset`、`JsFramePump` |
 | [marshal/04-OPAQUE.md](./marshal/04-OPAQUE.md) | Opaque API |
 | [marshal/06-CLASS.md](./marshal/06-CLASS.md) | ByObj、view |
 | [marshal/05-STRUCT.md](./marshal/05-STRUCT.md) | struct GC |

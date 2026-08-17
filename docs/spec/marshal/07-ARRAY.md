@@ -3,14 +3,14 @@ sidebar_position: 13
 title: "数组 Marshal"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\07-ARRAY.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`marshal\07-ARRAY.md`）
 :::
 
 
 # 数组 Marshal
 
 > **规范性：** szarray、mdarray 及 `byte[]` 在 JavaScript 与 C# 之间的 Marshal 规则。
-> **相关：** 创建、`length`、`get`/`set` → [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §7；`zts.to_bytes` / `to_array` → [../05-LIB.md](../05-LIB.md)；ByObj 基础 → [06-CLASS.md](./06-CLASS.md)；`[TsMarshalAs]` → [02-MARSHAL-AS.md](./02-MARSHAL-AS.md)。
+> **相关：** 创建、`length`、`get`/`set` → [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §7；`zents.to_bytes` / `to_array` → [../05-LIB.md](../05-LIB.md)；ByObj 基础 → [06-CLASS.md](./06-CLASS.md)；`[JsMarshalAs]` → [02-MARSHAL-AS.md](./02-MARSHAL-AS.md)。
 
 **平台原则：** 数组实例为 **ByObj exotic**（`ObjectRegistry` + **GC root**）。
 
@@ -22,7 +22,7 @@ title: "数组 Marshal"
 |---------|---------|---------|
 | **`T[]`（szarray）** | **ByObj exotic** | **ByObj exotic** **或** **JS Array** |
 | **`T[,…]`（mdarray）** | **ByObj exotic** | **仅 ByObj exotic** |
-| **`byte[]`** | 同 szarray | 同 szarray；`[TsMarshalAs(Bytes)]` → ↔ **string** |
+| **`byte[]`** | 同 szarray | 同 szarray；`[JsMarshalAs(Bytes)]` → ↔ **string** |
 
 脚本经 **`arr.get(...)` / `arr.set(..., value)`**、**`arr.length`** 访问（**不**实现整数键 `[[Get]]`），见 [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md) §7。
 
@@ -35,8 +35,8 @@ title: "数组 Marshal"
 | 形态 | **ByObj exotic** + 数组 IEO |
 | **`null`** | **`null`** |
 | 元素 Push | 按 `T` 默认 marshal |
-| **`[TsMarshalAs(Bytes)]` on `byte[]`** | Push JS **string**（octet） |
-| **`[TsMarshalAs(OpaqueValue)]`** | Push **OpaqueValue**（仅 C#→JS） |
+| **`[JsMarshalAs(Bytes)]` on `byte[]`** | Push JS **string**（octet） |
+| **`[JsMarshalAs(OpaqueValue)]`** | Push **OpaqueValue**（仅 C#→JS） |
 | **`params T[]`（C#→JS）** | 同 szarray：**ByObj exotic**（**不** 默认 Push JS Array） |
 
 ---
@@ -48,7 +48,7 @@ title: "数组 Marshal"
 | **ByObj exotic** | 类型须匹配目标 `T[]` |
 | **JS `Array`** | 索引 **0..length-1** 连续、**无 holes**；按序 Pop 元素构造 **`T[n]`** |
 | **`null`** | **`null`** |
-| **`undefined`** | 必选形参 → **`throw Error('zts: argument missing: …')`** |
+| **`undefined`** | 必选形参 → **`throw Error('zents: argument missing: …')`** |
 
 ### 3.1 Array 形态约束
 
@@ -77,7 +77,7 @@ CS.Demo.Process(null);
 | **`null`** | **`null`** |
 | **JS Array** | **不接受** → **throw** |
 
-不因 `[TsMarshalAs]` 接受 Array（`Object` 与默认等价；`OpaqueValue` 仅 C#→JS）。
+不因 `[JsMarshalAs]` 接受 Array（`Object` 与默认等价；`OpaqueValue` 仅 C#→JS）。
 
 ---
 
@@ -89,11 +89,11 @@ CS.Demo.Process(null);
 | **`GetValue` / `SetValue`** | 仍可用；`GetValue` 返回装箱 `object` |
 | **`arr.length`** | szarray → `Length`；mdarray → 各维长度之积 |
 
-> **与 `zts.to_array`：** 产出 **0 基** 连续 JS Array（`t[i] ↔ arr[i]`）；`get`/`set` 用 **C# 下标**。
+> **与 `zents.to_array`：** 产出 **0 基** 连续 JS Array（`t[i] ↔ arr[i]`）；`get`/`set` 用 **C# 下标**。
 
 ---
 
-## 6. `byte[]` 与 `[TsMarshalAs(Bytes)]`
+## 6. `byte[]` 与 `[JsMarshalAs(Bytes)]`
 
 | 配置 | C# ↔ JS |
 |------|---------|
@@ -122,24 +122,24 @@ CS.Demo.Process(null);
 
 ---
 
-## 8. `zts.to_bytes` / `zts.to_array`
+## 8. `zents.to_bytes` / `zents.to_array`
 
 [../05-LIB.md](../05-LIB.md) 便利 API（不改变默认 Pop/Push）。
 
-### 8.1 `zts.to_bytes`
+### 8.1 `zents.to_bytes`
 
 - 输入：**仅** szarray exotic
 - 元素：**blittable**（基元或仅 blittable 字段的 struct）
 - 输出：`Uint8Array` 或 binary string（实现二选一，须文档化）
 
-### 8.2 `zts.to_array`
+### 8.2 `zents.to_array`
 
 - 输入：szarray exotic
 - 输出：JS `Array`，**0..n-1**，`t[i] ↔ arr[i]`（**0 基**）
 
 ### 8.3 与 Pop Array 路径的区别
 
-| | **`zts.to_array`** | **Pop JS Array** |
+| | **`zents.to_array`** | **Pop JS Array** |
 |--|---------------------|------------------|
 | 方向 | exotic → Array（只读） | Array → 构造 `T[n]` |
 | 下标 | 0 基只读视图 | Pop 按 0..n-1 读元素 |
@@ -149,8 +149,8 @@ CS.Demo.Process(null);
 ## 9. 数组类型构造
 
 ```javascript
-const int_arr_type = zts.make_szarray_type(zts.types.int32);
-const arr = zts.new_szarray_by_element_type(zts.types.int32, 10);
+const int_arr_type = zents.make_szarray_type(zents.types.int32);
+const arr = zents.new_szarray_by_element_type(zents.types.int32, 10);
 ```
 
 见 [../02-TYPE-SYSTEM.md](../02-TYPE-SYSTEM.md)、[../05-LIB.md](../05-LIB.md)。

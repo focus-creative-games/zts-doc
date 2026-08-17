@@ -3,14 +3,14 @@ sidebar_position: 4
 title: "方法重载"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`04-METHOD-OVERLOAD.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`04-METHOD-OVERLOAD.md`）
 :::
 
 
 # 04 — 方法重载
 
 > C# 方法重载在 JavaScript 侧的解析与调用策略。适用于 **Il2Cpp（Player）** 与 **Mono（Editor）**。
-> 继承与 Bind 规则见 [02-TYPE-SYSTEM.md](./02-TYPE-SYSTEM.md) §5；`zts` API 见 [05-LIB.md](./05-LIB.md)。
+> 继承与 Bind 规则见 [02-TYPE-SYSTEM.md](./02-TYPE-SYSTEM.md) §5；`zents` API 见 [05-LIB.md](./05-LIB.md)。
 
 ---
 
@@ -21,9 +21,9 @@ C# 允许同名方法因参数类型/个数不同而重载；JavaScript 无静�
 | 目标 | 说明 |
 |------|------|
 | 易用 | `demo.Run(10)` 在常见场景下应能工作 |
-| 精确 | 同名冲突时 Bind 期自动挂 **全签名键**；亦可 `[TsAlias]` / `register_method` 挂短名 |
+| 精确 | 同名冲突时 Bind 期自动挂 **全签名键**；亦可 `[JsAlias]` / `register_method` 挂短名 |
 | 性能 | 热路径优先单候选 direct（全签名键、别名、或本地缓存 closure），避免反复 dispatch |
-| 一致 | Mono 与 Il2Cpp 选中同一重载，错误信息一致（`zts:` 前缀） |
+| 一致 | Mono 与 Il2Cpp 选中同一重载，错误信息一致（`zents:` 前缀） |
 
 **方法 `this`：** `obj.Method(args)` 作为 **方法调用** 时自动传入 CLR `this`；**提取** 的函数 **不** 自动绑定（[00-OVERVIEW.md](./00-OVERVIEW.md) §6）。
 
@@ -38,11 +38,11 @@ flowchart LR
     B -->|≥ 2| E["dispatch function"]
     E --> F["按 §3.6 选 overload"]
     S["全签名键 Name(Types…)"] --> C
-    G["[TsAlias] / 本地缓存"] --> C
+    G["[JsAlias] / 本地缓存"] --> C
     H["register_method 新名"] --> C
 ```
 
-1. **按最终名字分组**（§3、§5）：每个方法以其 **最终 JS 名**（C# 默认名、`[TsAlias]` / XML 别名）进入分组；**同名允许多候选**（仅 Bind 期）。
+1. **按最终名字分组**（§3、§5）：每个方法以其 **最终 JS 名**（C# 默认名、`[JsAlias]` / XML 别名）进入分组；**同名允许多候选**（仅 Bind 期）。
 2. **单候选 → direct；多候选 → dispatch**（§3.6）。
 3. **同名多候选时额外挂全签名键**（§3.7）：每个冲突重载再注册 **direct** 键 `MethodName(ParamTypeFullNames…)`（**不含**返回类型）。
 4. **运行时**（§6）：`register_method` 仅允许挂到 **尚不存在** 的新最终名（§6.1）。
@@ -60,9 +60,9 @@ flowchart LR
 | 1 | **direct method function** |
 | ≥ 2 | **dispatch function**（§3.6 选具体重载） |
 
-来源：多个 C# 同名重载；`[TsAlias]` 撞名；**C# extension**（[13-EXTENSION-METHODS.md](./13-EXTENSION-METHODS.md)）与实例方法 **同一最终名** → **合并竞争**（无「实例优先」）。
+来源：多个 C# 同名重载；`[JsAlias]` 撞名；**C# extension**（[13-EXTENSION-METHODS.md](./13-EXTENSION-METHODS.md)）与实例方法 **同一最终名** → **合并竞争**（无「实例优先」）。
 
-> **`zts.register_method` 除外：** 运行时 **禁止** 使用已存在的最终名（§6.1）。
+> **`zents.register_method` 除外：** 运行时 **禁止** 使用已存在的最终名（§6.1）。
 
 静态与实例 **分表**（STO `staticMap` vs IEO `byvalInstanceMap` / `byobjInstanceMap`）。
 
@@ -125,13 +125,13 @@ void G(int x, int y = 5);
 dispatch 为低效路径。热点应使用：
 
 - **全签名键**（§3.7，已是 direct）；
-- **单候选** `[TsAlias]` 名；
+- **单候选** `[JsAlias]` 名；
 - `register_method` 短名；
 - 本地缓存：`const run = demo['Run(System.Int32)']`。
 
 ### 3.5 失败错误
 
-无匹配 → **`throw new Error('zts: no overload for Demo.Run matching …; candidates: …')`**。
+无匹配 → **`throw new Error('zents: no overload for Demo.Run matching …; candidates: …')`**。
 
 ### 3.6 隐式转换分类与最优重载
 
@@ -181,7 +181,7 @@ dispatch 为低效路径。热点应使用：
 | 规则 | 说明 |
 |------|------|
 | 何时 | **仅** 该最终名下 ≥ 2 候选 |
-| 方法名 | C# `MethodInfo.Name`（非 `[TsAlias]` 短名） |
+| 方法名 | C# `MethodInfo.Name`（非 `[JsAlias]` 短名） |
 | 参数 | `Type.FullName` 逗号分隔；**不含**返回类型 |
 | 绑定 | 该候选 **direct function** |
 
@@ -206,27 +206,27 @@ const fn = demo['Run(System.Int32)'];
 fn(5);                                    // ❌ 不绑定 this
 ```
 
-短名冒号式体验：`register_method` 或 `[TsAlias]` → `demo.run_i32(5)`。
+短名冒号式体验：`register_method` 或 `[JsAlias]` → `demo.run_i32(5)`。
 
 ---
 
 ## 4. 签名字符串规范
 
-### 4.1 `zts.signature`
+### 4.1 `zents.signature`
 
 ```javascript
-const sig = zts.signature(zts.types.int32);
+const sig = zents.signature(zents.types.int32);
 // "(System.Int32)"
 
-const sig0 = zts.signature();
+const sig0 = zents.signature();
 // "()"
 ```
 
-- 参数为 typeArg（类型对象、`zts.types.*`、mscorlib 字符串）
+- 参数为 typeArg（类型对象、`zents.types.*`、mscorlib 字符串）
 - **不包含** 方法名
 - 格式：括号 + **`Type.FullName`** 列表
 
-Native：`__zts_create_signature`（`ZTSLib`）。`ztslib.js` 封装为 `zts.signature(...)`。
+Native：`__zents_create_signature`（`ZenTSLib`）。`zentslib.js` 封装为 `zents.signature(...)`。
 
 ### 4.2 全签名键 = 方法名 + §4.1
 
@@ -238,15 +238,15 @@ Native：`__zts_create_signature`（`ZTSLib`）。`ztslib.js` 封装为 `zts.sig
 
 ---
 
-## 5. 别名机制（`[TsAlias]`）
+## 5. 别名机制（`[JsAlias]`）
 
 ### 5.1 模型：换名 + 按最终名分组
 
-`[TsAlias]` / XML 指定 **唯一最终 JS 名**，**替换** C# 默认名（**不**双挂）。
+`[JsAlias]` / XML 指定 **唯一最终 JS 名**，**替换** C# 默认名（**不**双挂）。
 
 | 来源 | 条件 |
 |------|------|
-| `[TsAlias("…")]` | Attribute 非空 |
+| `[JsAlias("…")]` | Attribute 非空 |
 | XML `Method/@alias` | 无 Attribute 时 |
 | `MethodInfo.Name` | 以上皆无 |
 
@@ -265,10 +265,10 @@ public class Demo
     public void Run(int value) { }
     public void Run(string value) { }
 
-    [TsAlias("Foo")]
+    [JsAlias("Foo")]
     public void Bar(string s) { }   // 不再挂 "Bar"
 
-    [TsAlias("run_i32")]
+    [JsAlias("run_i32")]
     public void Run(long value) { } // 不再挂默认 "Run" 对此重载
 }
 ```
@@ -282,29 +282,29 @@ demo.run_i32(10);     // direct → Run(long)
 ### 5.3 C# Attribute
 
 ```csharp
-[TsAlias("run_i32")]
+[JsAlias("run_i32")]
 public void Run(int value) { ... }
 ```
 
-定义于 `ZTS.Common`。Attribute **优先于** XML。
+定义于 `ZenTS.Common`。Attribute **优先于** XML。
 
 ### 5.4 XML 配置（独立于 MarshalAs）
 
 | 约束 | 说明 |
 |------|------|
-| **独立路径** | Settings **`tsAliasXmlPaths`**（与 `marshalAsXmlPaths` **分开**） |
-| **独立根元素** | **`TsAlias`** |
-| **分文件** | 不得写入 `ZTSMarshalAs` |
+| **独立路径** | Settings **`jsAliasXmlPaths`**（与 `marshalAsXmlPaths` **分开**） |
+| **独立根元素** | **`JsAlias`** |
+| **分文件** | 不得写入 `ZenTSMarshalAs` |
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<TsAlias version="1">
+<JsAlias version="1">
   <Assembly name="Assembly-CSharp">
     <Type fullName="Demo">
       <Method name="Run" signature="(System.Int32)" alias="run_i32"/>
     </Type>
   </Assembly>
-</TsAlias>
+</JsAlias>
 ```
 
 | 属性 | 含义 |
@@ -332,13 +332,13 @@ Mono 运行时加载；Il2Cpp **Generate** 静态表；Player **不**读 XML。
 优先顺序：
 
 1. **全签名键**（§3.7）
-2. Bind 期 **`[TsAlias]`**
+2. Bind 期 **`[JsAlias]`**
 3. **`register_method`** 挂新短名
 
-### 6.1 `zts.register_method`
+### 6.1 `zents.register_method`
 
 ```javascript
-zts.register_method(aliasName, methodOrClosure);
+zents.register_method(aliasName, methodOrClosure);
 ```
 
 **用途：** 把 **direct** closure 挂到 **尚不存在** 的短名；之后 **`obj.aliasName(args)`** 方法调用绑定 `this`。
@@ -349,7 +349,7 @@ const demo = new CSharp.AC.Demo();
 demo['Run(System.Int32)'](5);           // 全签名 direct
 
 const run_i32 = demo['Run(System.Int32)'];
-zts.register_method("run_i32", run_i32);
+zents.register_method("run_i32", run_i32);
 
 demo.run_i32(5);                         // ✅ 方法调用 + this
 ```
@@ -370,12 +370,12 @@ demo.run_i32(5);                         // ✅ 方法调用 + this
 | 情况 | 行为 |
 |------|------|
 | `aliasName` **不存在** | 写入 direct |
-| `aliasName` **已存在** | **`throw Error('zts: …')`** |
+| `aliasName` **已存在** | **`throw Error('zents: …')`** |
 | 传入 **dispatch** | **throw** |
 
-与 `[TsAlias]`：Bind 期允许撞名；`register_method` **仅空位挂名**。
+与 `[JsAlias]`：Bind 期允许撞名；`register_method` **仅空位挂名**。
 
-Native：`__zts_register_method`。
+Native：`__zents_register_method`。
 
 ---
 
@@ -385,7 +385,7 @@ Native：`__zts_register_method`。
 |------|------|
 | 默认分派 | `demo.Run(10)` |
 | 全签名键 | `demo['Run(System.Int32)'](10)` |
-| `[TsAlias]` | `demo.run_i32(20)` |
+| `[JsAlias]` | `demo.run_i32(20)` |
 | `register_method` 后 | `demo.run_cached(20)` |
 | 静态 | `Demo.Add(3, 5)` |
 | 提取函数 | `const f = demo.Run; f(10)` ❌ |
@@ -404,13 +404,13 @@ Native：`__zts_register_method`。
 public class Demo
 {
     public void Run(int value) { }
-    [TsAlias("run_str")]
+    [JsAlias("run_str")]
     public void Run(string value) { }
     public void Foo(int x) { }
-    [TsAlias("Foo")]
+    [JsAlias("Foo")]
     public void Bar(string s) { }
     public static int Add(int a, int b) => a + b;
-    [TsAlias("add_i32")]
+    [JsAlias("add_i32")]
     public static int Add(int x) => x;
 }
 ```
@@ -425,7 +425,7 @@ demo['Run(System.Int32)'](10);
 demo.Foo("hi");
 
 const run_i32 = demo['Run(System.Int32)'];
-zts.register_method("run_cached", run_i32);
+zents.register_method("run_cached", run_i32);
 demo.run_cached(20);
 
 console.assert(CSharp.AC.Demo.add_i32(7) === 7);
@@ -440,6 +440,6 @@ console.assert(CSharp.AC.Demo.add_i32(7) === 7);
 | `ValueMarshaling` | `ConversionKind`、`TryPop` |
 | `FindMatchingMethod` | applicable + better member |
 | `MetaBinding` | dispatch、direct、`register_method` |
-| `ZTSLib` | `__zts_create_signature`、`__zts_register_method` |
+| `ZenTSLib` | `__zents_create_signature`、`__zents_register_method` |
 
 C# Extension 见 [13-EXTENSION-METHODS.md](./13-EXTENSION-METHODS.md)。

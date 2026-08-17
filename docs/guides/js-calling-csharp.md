@@ -8,7 +8,7 @@ description: "CSharp 懒绑定、csharp: import、构造与 Event（add_/remove_
 
 通过全局 **`CSharp`** 或 **`import { T } from "csharp:…"`** 访问 public 类型与成员。语义贴近 C#：`new Type()`、`Type.StaticMethod()`、`obj.InstanceMethod()`。含 namespace 须括号键或带路径的 `csharp:` specifier。
 
-Canonical：[zts-demo](https://github.com/focus-creative-games/zts-demo)、[Demo](https://github.com/focus-creative-games/zts-demo) 中的业务脚本。
+Canonical：[zen-ts-demo](https://github.com/focus-creative-games/zen-ts-demo)、[Demo](https://github.com/focus-creative-games/zen-ts-demo) 中的业务脚本。
 
 同名多签名见 [方法重载](/docs/guides/overloads/)（本章末有预告）。
 
@@ -42,7 +42,7 @@ const Nested = CSharp.AC['Outer+Nested']; // 嵌套类型用 +
 
 - 类型 **懒加载**；仅 **public** 可见
 - 静态与实例元数据 **独立**，不可混用
-- 未注册成员 **strict miss** → **`throw Error('zts: …')`**，**不**返回 `undefined`
+- 未注册成员 **strict miss** → **`throw Error('zents: …')`**，**不**返回 `undefined`
 
 ## 2. 推荐：`csharp:` 模块
 
@@ -147,14 +147,14 @@ export function main() {
 
 ## 方法重载预告
 
-`demo.Run(10)` 与 `demo.Run("hi")` 在多重载时走运行时分派。精确点名可用全签名键；热路径短名用 `[TsAlias]`。见 [方法重载](/docs/guides/overloads/)。
+`demo.Run(10)` 与 `demo.Run("hi")` 在多重载时走运行时分派。精确点名可用全签名键；热路径短名用 `[JsAlias]`。见 [方法重载](/docs/guides/overloads/)。
 
 ## 常见错误
 
 | 现象 | 处理 |
 |------|------|
 | `assembly/type not found` | 程序集名、namespace 括号、是否 public |
-| `Error('zts: … member not found')` | 拼写 / 可见性；读未知成员是 error（非 undefined） |
+| `Error('zents: … member not found')` | 拼写 / 可见性；读未知成员是 error（非 undefined） |
 | 静态/实例混用 | 静态走类型对象；实例走 `new` 出的对象 |
 | `member not writable` | 只读 Property / 只读字段 |
 | Event `.get` 为 undefined / throw | 改用 `add_` / `remove_` |

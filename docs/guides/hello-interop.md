@@ -8,7 +8,7 @@ description: "Initialize、最简 C#→JS 与 JS→C#，跑通第一条互操作
 
 本篇假定已完成 [安装](/docs/guides/install/)。目标：在 Editor Play 时同时看到 **C# 调 JS** 与 **JS 调 C#**。更短的 Demo 对照见 [快速开始](/docs/getting-started/quick-start/)；本篇是使用指南主线的正式起点。
 
-Canonical：[zts-demo](https://github.com/focus-creative-games/zts-demo) 的 `js-demo`（纯 JS）或 `ts-demo`（TypeScript）。
+Canonical：[zen-ts-demo](https://github.com/focus-creative-games/zen-ts-demo) 的 `js-demo`（纯 JS）或 `ts-demo`（TypeScript）。
 
 ## 1. 注册 loader 并 Initialize
 
@@ -16,7 +16,7 @@ Canonical：[zts-demo](https://github.com/focus-creative-games/zts-demo) 的 `js
 using System.IO;
 using System.Text;
 using UnityEngine;
-using ZTS;
+using ZenTS;
 
 public class Bootstrap : MonoBehaviour
 {
@@ -33,7 +33,7 @@ public class Bootstrap : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void InitZtsOnStartup()
     {
-        TsAppDomain.Initialize(LoadJsModule);
+        JsAppDomain.Initialize(LoadJsModule);
     }
 }
 ```
@@ -67,8 +67,8 @@ Func<int, int, int> AppAdd;
 void Awake()
 {
     // 须在 Initialize 之后；勿放在与 RuntimeInitializeOnLoadMethod 同类型的 static 字段初始化器里
-    AppMain = TsAppDomain.GetFunction<Action>("app", "main");
-    AppAdd = TsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
+    AppMain = JsAppDomain.GetFunction<Action>("app", "main");
+    AppAdd = JsAppDomain.GetFunction<Func<int, int, int>>("app", "add");
 }
 
 void Start()
@@ -121,7 +121,7 @@ console.log(demo.x);
 :::tip 与 Lua / 旧习惯的差异
 - 实例方法用 **`demo.SetX(10)`**，**没有** `demo:SetX(10)` 冒号语法
 - 构造用 **`new Demo()`**
-- 未知成员 **strict miss** → `throw Error('zts: …')`，不是 `undefined`
+- 未知成员 **strict miss** → `throw Error('zents: …')`，不是 `undefined`
 :::
 
 ## 预期输出（Editor Play）

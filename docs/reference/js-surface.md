@@ -1,12 +1,12 @@
 ---
 sidebar_position: 4
-title: "zts 与 csharp:"
+title: "zents 与 csharp:"
 description: 脚本侧全局与模块速查。
 ---
 
-# zts 与 csharp:
+# zents 与 csharp:
 
-脚本侧三条表面分工明确：**类型访问**走 `CSharp` / `csharp:`；**辅助构造与转换**走 `zts`；**实例成员**经 exotic 三表，**不经** `zts`。
+脚本侧三条表面分工明确：**类型访问**走 `CSharp` / `csharp:`；**辅助构造与转换**走 `zents`；**实例成员**经 exotic 三表，**不经** `zents`。
 
 权威全文：[02-TYPE-SYSTEM](/docs/spec/02-TYPE-SYSTEM/) · [05-LIB](/docs/spec/05-LIB/) · [metatable](/docs/spec/metatable/)。
 
@@ -26,8 +26,8 @@ CSharp.AC['Outer+Inner']               // 嵌套类型：+ 分隔
 
 | 层级 | miss 行为 |
 |------|-----------|
-| `CSharp[assembly]` | 懒创建并缓存；程序集不存在 → **`throw Error('zts: assembly not found: …')`** |
-| `assembly[typeFullName]` | 解析 Type → **EnsureBinding** → 缓存；不存在 → **`throw Error('zts: type not found: …')`** |
+| `CSharp[assembly]` | 懒创建并缓存；程序集不存在 → **`throw Error('zents: assembly not found: …')`** |
+| `assembly[typeFullName]` | 解析 Type → **EnsureBinding** → 缓存；不存在 → **`throw Error('zents: type not found: …')`** |
 
 **禁止**对不存在的程序集 / 类型返回 `undefined`。
 
@@ -67,8 +67,8 @@ const panel = new Panel();
 
 | 操作 | 行为 |
 |------|------|
-| 读/写未注册成员 | **`throw Error('zts: …')`**（含键名，如 `member not found`） |
-| 只写属性读 | **`throw Error('zts: property has no getter: …')`** |
+| 读/写未注册成员 | **`throw Error('zents: …')`**（含键名，如 `member not found`） |
+| 只写属性读 | **`throw Error('zents: property has no getter: …')`** |
 | 普通 JS object | 仍返回 `undefined`（标准语义） |
 | `import * as ns; ns.Missing`（`csharp:` 模块命名空间） | 标准 ES → **`undefined`**（**不是** CSharp miss throw） |
 
@@ -90,9 +90,9 @@ Type.staticMethod(a, b);   // 静态：无 this
 
 ---
 
-## `zts.*` 摘要表
+## `zents.*` 摘要表
 
-初始化时 native 注册 `__zts_*` hook，再加载 `ztslib.js` 封装为 `zts.*`（与 `CSharp` 同在主 `JSContext` 全局）。
+初始化时 native 注册 `__zents_*` hook，再加载 `zentslib.js` 封装为 `zents.*`（与 `CSharp` 同在主 `JSContext` 全局）。
 
 | API | 说明 |
 |-----|------|
@@ -109,9 +109,9 @@ Type.staticMethod(a, b);   // 静态：无 this
 | `to_delegate` | JS function → 指定 Delegate 类型（形参常可直传 function） |
 | `signature` / `register_method` | 参数括号串；空位挂短名（注册后方法调用绑 `this`） |
 
-失败路径统一 **`throw Error('zts: …')`**，**不**用 `undefined` 表示 miss。
+失败路径统一 **`throw Error('zents: …')`**，**不**用 `undefined` 表示 miss。
 
-指南：[zts 标准库](/docs/guides/zts-lib/) · 全文 [05-LIB](/docs/spec/05-LIB/)
+指南：[zents 标准库](/docs/guides/zents-lib/) · 全文 [05-LIB](/docs/spec/05-LIB/)
 
 ---
 

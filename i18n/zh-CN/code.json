@@ -1,6 +1,6 @@
 {
   "homepage.title": {
-    "message": "ZTS 文档",
+    "message": "ZenTS 文档",
     "description": "Homepage hero title"
   },
   "homepage.tagline": {
@@ -16,7 +16,7 @@
     "description": "Homepage demo CTA"
   },
   "homepage.heroMeta": {
-    "message": "Unity 2022.3 LTS · QuickJS · Editor Mono + Il2Cpp Player · 与 ZLua 同构",
+    "message": "Unity 2021.3 / 2022.3 / 6000 · 团结 · QuickJS · Editor Win/macOS · Player 含 Win64 / Android / iOS / WebGL / 小游戏 / 鸿蒙",
     "description": "Homepage hero meta line"
   },
   "homepage.codePreview.title": {
@@ -36,7 +36,7 @@
     "description": "Homepage document title"
   },
   "homepage.layoutDesc": {
-    "message": "ZTS：Unity 上基于 QuickJS 的 TypeScript / JavaScript 脚本方案，设计与 ZLua 对齐。",
+    "message": "ZenTS：Unity 上基于 QuickJS 的 TypeScript / JavaScript 脚本方案，设计与 ZLua 对齐。",
     "description": "Homepage meta description"
   },
   "homepage.feature.easy.title": {
@@ -44,7 +44,7 @@
     "description": "Feature 1 title"
   },
   "homepage.feature.easy.desc": {
-    "message": "声明式 GetFunction / [TsMarshalAs]，CSharp 懒绑定；无需 per-type Wrap 白名单。与 ZLua 同一套产品心智。",
+    "message": "声明式 GetFunction / [JsMarshalAs]，CSharp 懒绑定；无需 per-type Wrap 白名单。与 ZLua 同一套产品心智。",
     "description": "Feature 1 description"
   },
   "homepage.feature.ts.title": {

@@ -7,7 +7,7 @@ description: "C# 类型与实例在 QuickJS 中的 exotic 分派、三表与 str
 # Exotic 对象模型
 
 :::tip 谁该读本文
-**需要理解 `obj.Member` 底层如何查表、为何报错 `zts: member not found` 的开发者。** 日常用法见 [JS 调用 C#](/docs/guides/js-calling-csharp/)、[方法重载](/docs/guides/overloads/)。对照 ZLua 的「元表模型」：ZTS 用 QuickJS **exotic object + internal slots**，**不**要求 ECMAScript `Proxy`。
+**需要理解 `obj.Member` 底层如何查表、为何报错 `zents: member not found` 的开发者。** 日常用法见 [JS 调用 C#](/docs/guides/js-calling-csharp/)、[方法重载](/docs/guides/overloads/)。对照 ZLua 的「元表模型」：ZenTS 用 QuickJS **exotic object + internal slots**，**不**要求 ECMAScript `Proxy`。
 :::
 
 C# 类型在 JS 中以 **类型对象 `T`** 暴露静态成员；实例以 **实例 exotic object** 暴露实例成员。属性分派走 **三表 + strict miss**：未注册成员直接 **`throw Error`**，**不**回退到 C# 反射，也 **不**返回 `undefined`。
@@ -87,7 +87,7 @@ sequenceDiagram
 
 ```javascript
 const demo = new Demo();
-const _ = demo.nonExistentField; // Error: zts: member not found: …
+const _ = demo.nonExistentField; // Error: zents: member not found: …
 demo.nonExistentField = 1;       // Error: member not found / not writable
 demo.PrivateMethod();            // Error（private 未注册）
 ```
@@ -102,7 +102,7 @@ demo.PrivateMethod();            // Error（private 未注册）
 | `const f = obj.Method; f(args)` | **不**自动绑定 this（与常见 JS 一致） |
 | 单一 public 重载 | methodTable 直接桥接 |
 | 多个重载 | dispatch 函数（运行时分派） |
-| `[TsAlias("run_i32")]` | 额外键 `run_i32` → 单桥接 |
+| `[JsAlias("run_i32")]` | 额外键 `run_i32` → 单桥接 |
 
 签名字符串 **不是** 推荐的日常 JS 属性键；日常用短名 + dispatch / 别名。
 
@@ -122,7 +122,7 @@ Event **无**专用 `{ get, set, fire }` 对象；使用 `add_EventName` / `remo
 | 方案 | 分派载体 |
 |------|----------|
 | ZLua | userdata + Lua 元表三表 |
-| **ZTS** | QuickJS **exotic object** + internal slots |
+| **ZenTS** | QuickJS **exotic object** + internal slots |
 | ECMAScript `Proxy` | 规范 **不要求**；若实现内部使用，不得改变可见行为 |
 
 ## 何时读规范

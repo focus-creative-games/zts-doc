@@ -1,5 +1,5 @@
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`metatable\03-BINDING.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`metatable\03-BINDING.md`）
 :::
 
 ﻿---
@@ -70,7 +70,7 @@ enum 的 public static literal 优先 **直接写入类型对象 `T`** 为 under
 | 只读 | ✅ getter | ❌ |
 | 只写 | ❌ | ✅ setter |
 
-只读 property：属性 set 在 setter 表 miss 后报错。只写 property：属性 get 在 method / getter 表均未命中、但 setter 表命中时，报 `zts: property has no getter: {key}`。
+只读 property：属性 set 在 setter 表 miss 后报错。只写 property：属性 get 在 method / getter 表均未命中、但 setter 表命中时，报 `zents: property has no getter: {key}`。
 
 ### 3.4 构造函数
 
@@ -116,9 +116,9 @@ public 实例构造函数 **不** 进入任何三表。绑定阶段仅收集当�
 
 ## 6. 方法重载与别名
 
-同一 **最终 JS 名** 下多个候选方法：在 `methodTable` 写入 **dispatch function**，并为每个候选写入 **全签名 direct 键**（`../04-METHOD-OVERLOAD.md` §3.7）。最终名还来自 `[TsAlias]` / XML（同文档 §3、§5）。运行时 `zts.register_method` **不得**占用已有 method 名或重载组名（§6.1）；其用途是把已有 direct（含全签名键）挂成 **短名** 以便 `obj.shortName(args)` 调用。
+同一 **最终 JS 名** 下多个候选方法：在 `methodTable` 写入 **dispatch function**，并为每个候选写入 **全签名 direct 键**（`../04-METHOD-OVERLOAD.md` §3.7）。最终名还来自 `[JsAlias]` / XML（同文档 §3、§5）。运行时 `zents.register_method` **不得**占用已有 method 名或重载组名（§6.1）；其用途是把已有 direct（含全签名键）挂成 **短名** 以便 `obj.shortName(args)` 调用。
 
-`[TsAlias]` **允许**与默认方法名或其它别名重复；重复即并入同一 overload 组。
+`[JsAlias]` **允许**与默认方法名或其它别名重复；重复即并入同一 overload 组。
 
 静态与实例、ByVal 与 ByObj 的重载分组 **相互独立**。
 

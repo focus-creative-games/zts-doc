@@ -3,13 +3,13 @@ sidebar_position: 3
 title: "Mono 回调 Gate"
 ---
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`build\03-MONO-CALLBACK-GATE.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`build\03-MONO-CALLBACK-GATE.md`）
 :::
 
 
 # 构建 — Editor Mono：`JS_Throw` 与 Native Callback Gate
 
-> 解决 **Unity Editor（`ZTS.Mono`）** 下，JS→C# 回调帧上执行 **`JS_Throw`** / 不安全堆栈抓取导致的崩溃。
+> 解决 **Unity Editor（`ZenTS.Mono`）** 下，JS→C# 回调帧上执行 **`JS_Throw`** / 不安全堆栈抓取导致的崩溃。
 > **仅 Editor Mono** 启用；Il2Cpp Player **不**使用本 gate。
 > 引擎构建见 [01-QUICKJS.md](./01-QUICKJS.md)；异常语义见 [10-LIFETIME.md](../10-LIFETIME.md) §8。
 > **不**修改 QuickJS 上游；**不**改变 `try/catch` 可见语义。
@@ -23,7 +23,7 @@ title: "Mono 回调 Gate"
 | 现象 | 说明 |
 |------|------|
 | QuickJS + `JS_Throw` 穿过 Mono reverse-P/Invoke | Win64 上 SEH / 栈展开异常 → SIGSEGV 或 Editor 硬崩 |
-| 回调内 `Debug.Log`（带托管堆栈） | 活跃 QuickJS 调用帧时抓堆栈可能 SIGSEGV；故有 **`TsPrintBuffer`** 延迟刷出（实现层） |
+| 回调内 `Debug.Log`（带托管堆栈） | 活跃 QuickJS 调用帧时抓堆栈可能 SIGSEGV；故有 **`JsPrintBuffer`** 延迟刷出（实现层） |
 | 团结等：回调内 **`throw`** | 外层 QuickJS 调用仍活跃时托管异常 first-pass 可能 SIGSEGV |
 
 统一协议：**托管从不直接 `JS_Throw`（及等价 longjmp 路径），由 native gate 在托管 return 之后抛出**。
@@ -52,7 +52,7 @@ QuickJS 的 **`JS_Throw`** 依赖 **setjmp/longjmp**（或等价非本地控制�
 
 ```text
 JS_Call / QuickJS 引擎
-  → zts_callback_gate              ← native；仅此处可 JS_Throw
+  → zents_callback_gate              ← native；仅此处可 JS_Throw
        → managed JsCSFunction      ← 失败：push Error + return SENTINEL；禁止 JS_Throw
        ← return
   ← gate: 若 SENTINEL 则 JS_Throw(ctx, 栈顶)；否则原样 return JSValue
@@ -65,7 +65,7 @@ JS_Call / QuickJS 引擎
 | | 约定 |
 |--|------|
 | 成功 | managed 返回正常 **`JSValue`**（**不是** sentinel 包装的 tag） |
-| 失败 | managed 已将 **`Error`**（或 QuickJS 异常对象）push 到当前栈顶，然后返回 **`ZTS_CALLBACK_ERROR_SENTINEL`** |
+| 失败 | managed 已将 **`Error`**（或 QuickJS 异常对象）push 到当前栈顶，然后返回 **`ZENTS_CALLBACK_ERROR_SENTINEL`** |
 | Sentinel 值 | **`0xFFFF5A12`**（实现常量；C 与 C# **必须**一致；与 ZLua `0xFFFF5A11` **刻意区分** 避免混链） |
 | Gate | 若返回值 tag 为 sentinel → `JS_Throw(ctx, JS_GetStackTop(ctx) 对应值)`；否则 `return jsValue` |
 
@@ -82,13 +82,13 @@ Gate 以 **`JS_NewCFunctionMagic`**（或等价）注册；JS 侧看到的可调
 
 Managed 经 gate 进入时，读取逻辑数据须使用 **偏移后的 magic / 私有数据索引**（与 ZLua gate 的 upvalue+1 规则同构）。
 
-`zts_gate_init` 注入：
+`zents_gate_init` 注入：
 
 ```c
-void zts_gate_init(
+void zents_gate_init(
     void *(*js_touserdata)(JSContext *, JSValue, int),
     JSValue (*js_throw)(JSContext *, JSValue),
-    int error_sentinel_tag  /* 固定 ZTS_CALLBACK_ERROR_SENTINEL */
+    int error_sentinel_tag  /* 固定 ZENTS_CALLBACK_ERROR_SENTINEL */
 );
 ```
 
@@ -97,23 +97,23 @@ void zts_gate_init(
 Gate 编译为独立原生库，**不**链死 QuickJS：
 
 1. 已加载当前 **`quickjs`** Editor DLL 之后
-2. `zts_gate_init(...)` 注入 `JS_GetOpaque` / `JS_Throw` 等函数指针（或仅 throw + 私有约定）
-3. `zts_get_callback_gate()` → 返回 gate 的 **`JSCFunction`** 指针供 `JS_NewCFunctionMagic` 包装
+2. `zents_gate_init(...)` 注入 `JS_GetOpaque` / `JS_Throw` 等函数指针（或仅 throw + 私有约定）
+3. `zents_get_callback_gate()` → 返回 gate 的 **`JSCFunction`** 指针供 `JS_NewCFunctionMagic` 包装
 
-源码：`ZTS~/mono-native/`。产物与 Editor QuickJS 库同放在 **`Plugins/quickjs/`**（或 `Plugins/zts/` 子目录，与包 README 一致），**仅 Editor** 启用。
+源码：`ZenTS~/mono-native/`。产物与 Editor QuickJS 库同放在 **`Plugins/quickjs/`**（或 `Plugins/zents/` 子目录，与包 README 一致），**仅 Editor** 启用。
 
 | 平台 | 随附文件 | 说明 |
 |------|----------|------|
-| Windows Editor x64 | `Plugins/quickjs/zts_mono_gate.dll` | 本包随附 |
-| macOS Editor | `Plugins/quickjs/libzts_mono_gate.dylib` | universal 优先 |
-| Linux Editor | `Plugins/quickjs/libzts_mono_gate.so` | 可选自建 |
+| Windows Editor x64 | `Plugins/quickjs/zents_mono_gate.dll` | 本包随附 |
+| macOS Editor | `Plugins/quickjs/libzents_mono_gate.dylib` | universal 优先 |
+| Linux Editor | `Plugins/quickjs/libzents_mono_gate.so` | 可选自建 |
 
 Gate **一份即可**覆盖 QuickJS 小版本升级（换 `quickjs.dll` **不必** 重编 gate，除非 QuickJS C API 破坏 ABI）。
 
 ### 2.5 Gate C 入口（规范伪码）
 
 ```c
-static JSValue zts_callback_gate(JSContext *ctx, JSValueConst this_val,
+static JSValue zents_callback_gate(JSContext *ctx, JSValueConst this_val,
                                  int argc, JSValue *argv, int magic)
 {
     JSCFunction *fn = (JSCFunction *)get_managed_fn(ctx, magic);
@@ -137,7 +137,7 @@ static JSValue zts_callback_gate(JSContext *ctx, JSValueConst this_val,
 凡 JS→C# 的 **`JS_NewCFunction` / `JS_NewCFunctionMagic`（managed 回调）** **必须** 经 gate：
 
 - `JsCallbackGate.NewCFunction` / `NewCFunctionMagic`
-- 或等价封装（`ClosurePin`、`ZTSLib.Register`、`TypeRegistry*`、exotic 分派 stub 等）
+- 或等价封装（`ClosurePin`、`ZenTSLib.Register`、`TypeRegistry*`、exotic 分派 stub 等）
 
 **禁止** 把裸 `Marshal.GetFunctionPointerForDelegate` 直接 **`JS_NewCFunction`** 暴露给 QuickJS（finalizer / `__gc` 等亦须走 gate）。
 
@@ -147,9 +147,9 @@ static JSValue zts_callback_gate(JSContext *ctx, JSValueConst this_val,
 |-----|------|
 | `QuickJsDllExtension.ThrowError` | 构造 `Error` / `JS_NewError` + push + return **`ErrorSentinel`**（**不**调 `JS_Throw`） |
 | `JsCallbackBoundary.ToJsError` | 同上（经 `ThrowError`） |
-| `JsCallbackBoundary.Throw` | **抛** `TsScriptException`（由入口 `try/catch` 转为 sentinel 路径） |
+| `JsCallbackBoundary.Throw` | **抛** `JsScriptException`（由入口 `try/catch` 转为 sentinel 路径） |
 
-错误文案须带 **`zts:`** 前缀（[10-LIFETIME.md](../10-LIFETIME.md) §8.3）。
+错误文案须带 **`zents:`** 前缀（[10-LIFETIME.md](../10-LIFETIME.md) §8.3）。
 
 ### 3.3 嵌套 C#→JS 失败
 
@@ -157,7 +157,7 @@ static JSValue zts_callback_gate(JSContext *ctx, JSValueConst this_val,
 
 ### 3.4 初始化时机
 
-在加载 **`quickjs`** DLL 并创建主 **`JSContext`** 之后、注册任何 gated 回调之前调用 **`JsCallbackGate.EnsureInitialized()`**（例如 `TsMonoAppDomain` 构造早期）。
+在加载 **`quickjs`** DLL 并创建主 **`JSContext`** 之后、注册任何 gated 回调之前调用 **`JsCallbackGate.EnsureInitialized()`**（例如 `JsMonoAppDomain` 构造早期）。
 
 ---
 
@@ -165,30 +165,30 @@ static JSValue zts_callback_gate(JSContext *ctx, JSValueConst this_val,
 
 | 配置 | 是否启用 Gate |
 |------|----------------|
-| Editor + `ZTS.Mono` | **是** |
+| Editor + `ZenTS.Mono` | **是** |
 | Il2Cpp Player | **否** |
 
 ### 4.1 与 Il2Cpp 的对比
 
-Il2Cpp 的 `zts-runtime` 在调用 **`JS_Throw`** 时要求：**已处于可 longjmp 的 native 顶层，栈上无依赖 C++ 析构的临时对象**。该约束与 Mono×QuickJS 的 SEH 问题不同；**Il2Cpp 不引入本 gate**（[10-LIFETIME.md](../10-LIFETIME.md) §8.2）。
+Il2Cpp 的 `zents-runtime` 在调用 **`JS_Throw`** 时要求：**已处于可 longjmp 的 native 顶层，栈上无依赖 C++ 析构的临时对象**。该约束与 Mono×QuickJS 的 SEH 问题不同；**Il2Cpp 不引入本 gate**（[10-LIFETIME.md](../10-LIFETIME.md) §8.2）。
 
 ---
 
-## 5. 如何构建 `zts_mono_gate` 原生插件
+## 5. 如何构建 `zents_mono_gate` 原生插件
 
-Gate **不链接** QuickJS；`JS_Throw` 等在运行时由 C# `zts_gate_init` 注入。
+Gate **不链接** QuickJS；`JS_Throw` 等在运行时由 C# `zents_gate_init` 注入。
 
 ### 5.1 源码与脚本位置
 
-包内相对路径：`Packages/com.code-philosophy.zts/ZTS~/mono-native/`
+包内相对路径：`Packages/com.code-philosophy.zen-ts/ZenTS~/mono-native/`
 
 | 文件 | 作用 |
 |------|------|
-| `zts_mono_gate.c` | Gate 实现 |
-| `build_zts_mono_gate.ps1` | Windows x64 → `Plugins/quickjs/zts_mono_gate.dll` |
-| `build_zts_mono_gate_unix.sh` | macOS / Linux → `libzts_mono_gate.*` |
+| `zents_mono_gate.c` | Gate 实现 |
+| `build_zents_mono_gate.ps1` | Windows x64 → `Plugins/quickjs/zents_mono_gate.dll` |
+| `build_zents_mono_gate_unix.sh` | macOS / Linux → `libzents_mono_gate.*` |
 
-`DllImport("zts_mono_gate")` 由 Unity 映射到上述文件名。
+`DllImport("zents_mono_gate")` 由 Unity 映射到上述文件名。
 
 ### 5.2 Windows Editor（x64）
 
@@ -196,25 +196,25 @@ Gate **不链接** QuickJS；`JS_Throw` 等在运行时由 C# `zts_gate_init` �
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File `
-  Packages/com.code-philosophy.zts/ZTS~/mono-native/build_zts_mono_gate.ps1
+  Packages/com.code-philosophy.zen-ts/ZenTS~/mono-native/build_zents_mono_gate.ps1
 ```
 
 脚本行为：
 
 1. 调用 `vcvars64.bat`
 2. `cl /O2 /LD /MD` 产出到 staging 目录
-3. `Copy-Item -Force` 覆盖 `Plugins/quickjs/zts_mono_gate.dll`
+3. `Copy-Item -Force` 覆盖 `Plugins/quickjs/zents_mono_gate.dll`
 4. 清理中间文件；打印时间戳 — **须核对已更新**
 
-导出符号至少包含：`zts_gate_init`、`zts_get_callback_gate`、`zts_callback_error_sentinel`。
+导出符号至少包含：`zents_gate_init`、`zents_get_callback_gate`、`zents_callback_error_sentinel`。
 
 ### 5.3 macOS / Linux Editor
 
 ```bash
-bash Packages/com.code-philosophy.zts/ZTS~/mono-native/build_zts_mono_gate_unix.sh
+bash Packages/com.code-philosophy.zen-ts/ZenTS~/mono-native/build_zents_mono_gate_unix.sh
 ```
 
-产出：`libzts_mono_gate.dylib` / `libzts_mono_gate.so`；PluginImporter：**Editor 启用**、Player **禁用**。
+产出：`libzents_mono_gate.dylib` / `libzents_mono_gate.so`；PluginImporter：**Editor 启用**、Player **禁用**。
 
 ### 5.4 Editor 布局（`Plugins/quickjs`）
 
@@ -222,9 +222,9 @@ bash Packages/com.code-philosophy.zts/ZTS~/mono-native/build_zts_mono_gate_unix.
 Plugins/quickjs/
   win32-x64/quickjs.dll
   darwin-universal/quickjs.dylib
-  zts_mono_gate.dll              # Windows gate
-  libzts_mono_gate.dylib           # macOS gate
-  libzts_mono_gate.so              # Linux（可选）
+  zents_mono_gate.dll              # Windows gate
+  libzents_mono_gate.dylib           # macOS gate
+  libzents_mono_gate.so              # Linux（可选）
 ```
 
 **不要** 放到会被 Player 误加载的平台子目录而不写 `.meta` 禁用。
@@ -233,7 +233,7 @@ Plugins/quickjs/
 
 | 项 | 说明 |
 |----|------|
-| ABI | 改 `zts_gate_init` 形参或 sentinel 后，须同步 C# `JsCallbackGate` 并重编 |
+| ABI | 改 `zents_gate_init` 形参或 sentinel 后，须同步 C# `JsCallbackGate` 并重编 |
 | 不链 QuickJS | 换 `quickjs.dll` 小版本 **不必** 重编 gate（除非注入 API 签名变化） |
 | 验证 | 回调错误路径须 **`try/catch` 可捕获** 且 Editor 不崩 |
 | 提交 | 二进制与 `.meta` 纳入版本库或 CI 产出 |
@@ -244,12 +244,12 @@ Plugins/quickjs/
 
 | 组件 | 路径（包内相对） |
 |------|------------------|
-| Gate C 源 | `ZTS~/mono-native/zts_mono_gate.c` |
-| 编译脚本 | `ZTS~/mono-native/build_zts_mono_gate*.ps1|.sh` |
-| 原生插件 | `Plugins/quickjs/zts_mono_gate*` / `libzts_mono_gate*` |
+| Gate C 源 | `ZenTS~/mono-native/zents_mono_gate.c` |
+| 编译脚本 | `ZenTS~/mono-native/build_zents_mono_gate*.ps1|.sh` |
+| 原生插件 | `Plugins/quickjs/zents_mono_gate*` / `libzents_mono_gate*` |
 | C# 门面 | `Runtime/Mono/Utils/JsCallbackGate.cs` |
 | 错误边界 | `Runtime/Mono/Utils/JsCallbackBoundary.cs` |
-| 注册汇聚 | `ClosurePin`、`ZTSLib`、`TypeRegistry*` 等 |
+| 注册汇聚 | `ClosurePin`、`ZenTSLib`、`TypeRegistry*` 等 |
 
 ---
 
@@ -271,4 +271,4 @@ Plugins/quickjs/
 | [01-QUICKJS.md](./01-QUICKJS.md) | Editor `quickjs.dll` 构建 |
 | [10-LIFETIME.md](../10-LIFETIME.md) §8 | C#↔JS 异常对外语义 |
 | [04-JS-DEBUGGER.md](./04-JS-DEBUGGER.md) | 调试 hook 须兼容 gate |
-| 实现 `TsPrintBuffer` | 延迟 `Debug.Log`（与 gate 互补） |
+| 实现 `JsPrintBuffer` | 延迟 `Debug.Log`（与 gate 互补） |

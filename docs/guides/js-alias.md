@@ -1,10 +1,10 @@
 ---
 sidebar_position: 19
-title: TsAlias
-description: "[TsAlias] 换名与 XML（tsAliasXmlPaths / TsAlias）。"
+title: JsAlias
+description: "[JsAlias] 换名与 XML（jsAliasXmlPaths / JsAlias）。"
 ---
 
-# TsAlias
+# JsAlias
 
 给某个 C# 方法指定 **JS 侧最终键名**（**换名**，不是「默认名 + 额外别名」）。有别名时 **不再** 以 `MethodInfo.Name` 注册该方法。单候选时为 **direct**（O(1)），适合热路径。
 
@@ -14,19 +14,19 @@ description: "[TsAlias] 换名与 XML（tsAliasXmlPaths / TsAlias）。"
 
 | 场景 | 做法 |
 |------|------|
-| 能改 C#，热路径要短名 | **`[TsAlias]`** |
-| 不能改源码（预编译 DLL） | Settings **`tsAliasXmlPaths`** + `TsAlias` XML |
-| 不能改 C#、运行时临时挂名 | `zts.register_method`（见 [重载](/docs/guides/overloads/)） |
+| 能改 C#，热路径要短名 | **`[JsAlias]`** |
+| 不能改源码（预编译 DLL） | Settings **`jsAliasXmlPaths`** + `JsAlias` XML |
+| 不能改 C#、运行时临时挂名 | `zents.register_method`（见 [重载](/docs/guides/overloads/)） |
 | 只想精确点名、不在乎写法 | 全签名键 `demo['Run(System.Int32)'](5)` |
 
-## `[TsAlias]` 属性
+## `[JsAlias]` 属性
 
 ```csharp
-using ZTS;
+using ZenTS;
 
 public class Demo
 {
-    [TsAlias("run_i32")]
+    [JsAlias("run_i32")]
     public void Run(int value) { }
 
     public void Run(string value) { }
@@ -53,13 +53,13 @@ demo.Run("hi");      // 仅剩 Run(string) 等未换名的重载
 ```csharp
 public void Foo(int x) { }
 
-[TsAlias("Foo")]           // Bar 换名为 Foo，并入 "Foo" 组；不再挂 "Bar"
+[JsAlias("Foo")]           // Bar 换名为 Foo，并入 "Foo" 组；不再挂 "Bar"
 public void Bar(string s) { }
 
-[TsAlias("print")]
+[JsAlias("print")]
 public void LogA(int x) { }
 
-[TsAlias("print")]         // 两个 print → dispatch
+[JsAlias("print")]         // 两个 print → dispatch
 public void LogB(string s) { }
 ```
 
@@ -73,17 +73,17 @@ d.print(1);      // 组内选 LogA(int)
 
 ## XML 配置
 
-与 `[TsMarshalAs]` **分开**：
+与 `[JsMarshalAs]` **分开**：
 
 | | Alias | MarshalAs |
 |--|-------|-----------|
-| Settings 字段 | **`tsAliasXmlPaths`** | `marshalAsXmlPaths` |
-| 根元素 | **`TsAlias`** | `ZTSMarshalAs` |
+| Settings 字段 | **`jsAliasXmlPaths`** | `marshalAsXmlPaths` |
+| 根元素 | **`JsAlias`** | `ZenTSMarshalAs` |
 | 文件 | **分文件** | 分文件 |
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
-<TsAlias version="1">
+<JsAlias version="1">
   <Assembly name="Assembly-CSharp">
     <Type fullName="Demo">
       <Method name="Run" signature="(System.Int32)" alias="run_i32"/>
@@ -92,7 +92,7 @@ d.print(1);      // 组内选 LogA(int)
       <Method name="Show" signature="()" alias="show_panel"/>
     </Type>
   </Assembly>
-</TsAlias>
+</JsAlias>
 ```
 
 | 属性 | 说明 |
@@ -106,7 +106,7 @@ d.print(1);      // 组内选 LogA(int)
 ### 优先级与平台
 
 - 同一方法：**Attribute > XML**（有 Attribute 则忽略该槽位 XML）
-- **Mono**：运行时读 `tsAliasXmlPaths`
+- **Mono**：运行时读 `jsAliasXmlPaths`
 - **Il2Cpp**：Generate 写入静态表，**Player 不读 XML**（改 XML 后须重新 Generate）
 - 同一 `(assembly, type, method, signature)` 多条 `@alias` → **失败**
 
@@ -115,7 +115,7 @@ d.print(1);      // 组内选 LogA(int)
 | 方式 | 说明 |
 |------|------|
 | 全签名键 | Bind 自动；不换默认名；`demo['Run(System.Int32)'](5)` |
-| `[TsAlias]` / XML | Bind 期 **换名**；热路径首选短名 |
+| `[JsAlias]` / XML | Bind 期 **换名**；热路径首选短名 |
 | `register_method` | 运行时把已有 direct 挂到 **空位**短名；不合并 overload |
 
 ## 常见错误
@@ -123,14 +123,14 @@ d.print(1);      // 组内选 LogA(int)
 | 现象 | 原因 |
 |------|------|
 | `demo.Run(10)` 调不到已标 alias 的重载 | 已换名，应使用别名或其它未换名的重载 |
-| `demo.Bar` → throw | `Bar` 被 `[TsAlias("Foo")]` 换走（miss → **Error**，非 `undefined`） |
+| `demo.Bar` → throw | `Bar` 被 `[JsAlias("Foo")]` 换走（miss → **Error**，非 `undefined`） |
 | XML 不生效（Player） | 未重新 **Generate**；或路径写在了 `marshalAsXmlPaths` |
-| 与 MarshalAs 写在同一根元素 | 须独立 `TsAlias` 文件 |
+| 与 MarshalAs 写在同一根元素 | 须独立 `JsAlias` 文件 |
 
 ## 相关文档
 
 - [方法重载](/docs/guides/overloads/)
 - [重载规范 §5](/docs/spec/04-METHOD-OVERLOAD/)
 - [Attributes](/docs/reference/attributes/)
-- [扩展方法](/docs/guides/extension-methods/)（另一套 XML：`ZTSExtensions`）
-- [TsMarshalAs](/docs/guides/ts-marshal-as/)（另一套 XML，勿混用）
+- [扩展方法](/docs/guides/extension-methods/)（另一套 XML：`JsExtensions`）
+- [JsMarshalAs](/docs/guides/js-marshal-as/)（另一套 XML，勿混用）

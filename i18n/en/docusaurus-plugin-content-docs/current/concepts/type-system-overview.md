@@ -19,7 +19,7 @@ description: "CSharp 根对象、csharp: import、静实例隔离与构造模型
 | 静实例隔离 | 静态与实例成员使用 **独立** 三表 |
 | 仅 public | JS 仅可访问 `public` 成员 |
 | Bind 期扁平继承 | 继承成员在 EnsureBinding 写入当前类型三表；**无**运行时沿链查找 |
-| strict miss | 未注册成员 **`throw Error('zts: member not found: …')`** |
+| strict miss | 未注册成员 **`throw Error('zents: member not found: …')`** |
 
 ## 两条等价入口
 
@@ -131,7 +131,7 @@ sequenceDiagram
 | 场景 | 入口 |
 |------|------|
 | 开放泛型定义 | `CSharp.mscorlib['System.Collections.Generic.List`1']` |
-| 闭合泛型 | `zts.make_generic_type(...)` 等（见 [05-LIB](/docs/spec/05-LIB/)） |
+| 闭合泛型 | `zents.make_generic_type(...)` 等（见 [05-LIB](/docs/spec/05-LIB/)） |
 | 数组类型 | 类型系统 §7 / [数组指南](/docs/guides/arrays/) |
 
 详见 [泛型指南](/docs/guides/generics/)。
@@ -152,7 +152,7 @@ sequenceDiagram
 | 问题 | 文档 |
 |------|------|
 | 成员如何分派？ | [Exotic 对象模型](/docs/concepts/exotic-model/) |
-| 重载与别名？ | [方法重载规范](/docs/spec/04-METHOD-OVERLOAD/) · [TsAlias](/docs/guides/ts-alias/) |
+| 重载与别名？ | [方法重载规范](/docs/spec/04-METHOD-OVERLOAD/) · [JsAlias](/docs/guides/js-alias/) |
 | 数组 / 继承？ | [类型系统规范](/docs/spec/02-TYPE-SYSTEM/) |
 | 扩展方法？ | [扩展方法](/docs/guides/extension-methods/) |
 

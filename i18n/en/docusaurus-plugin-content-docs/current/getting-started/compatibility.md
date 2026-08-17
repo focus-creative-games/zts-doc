@@ -23,11 +23,11 @@ libil2cpp patch resolution: see [Multi-version](/docs/spec/11-MULTI-VERSION/).
 
 | Category | Status |
 |----------|--------|
-| **Script VM** | **QuickJS** (pin under package `ZTS~/`; **no** multi-engine matrix) |
+| **Script VM** | **QuickJS** (pin under package `ZenTS~/`; **no** multi-engine matrix) |
 | **Editor** | **Mono** (Expression Emit; **JS-visible semantics match** Il2Cpp) |
-| **Player** | **Il2Cpp** (authoritative; `zts-runtime` C++ bridges) |
+| **Player** | **Il2Cpp** (authoritative; `zents-runtime` C++ bridges) |
 
-**Il2Cpp builds:** before shipping, run **`ZTS/Generate/All`** (C++ stubs, **not** C# Wrap). See [Build](/docs/guides/build/), [Editor vs Player](/docs/guides/editor-vs-player/).
+**Il2Cpp builds:** before shipping, run **`ZenTS/Generate/All`** (C++ stubs, **not** C# Wrap). See [Build](/docs/guides/build/), [Editor vs Player](/docs/guides/editor-vs-player/).
 
 ## Target platforms
 
@@ -38,6 +38,6 @@ libil2cpp patch resolution: see [Multi-version](/docs/spec/11-MULTI-VERSION/).
 
 After Install copies QuickJS into LocalIl2Cpp, export and link with the normal Unity toolchain for the chosen target. There is **no** “mobile-only + bring-your-own static libs” special case (unlike ZLua’s LuaJIT model). Details: [QuickJS build](/docs/spec/build/01-QUICKJS/) §5.
 
-For other platform issues, please [file an Issue](https://github.com/focus-creative-games/zts/issues).
+For other platform issues, please [file an Issue](https://github.com/focus-creative-games/zen-ts/issues).
 
 Semantic contracts live under [spec](/docs/category/spec/); project stage: [Project status](/docs/getting-started/project-status/).

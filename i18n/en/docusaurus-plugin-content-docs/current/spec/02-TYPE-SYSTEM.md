@@ -1,5 +1,5 @@
 :::note 文档站副本
-本页为语义契约的发布副本；请在上游 `ZTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`02-TYPE-SYSTEM.md`）
+本页为语义契约的发布副本；请在上游 `ZenTSTest/Docs/spec` 修改后执行 `npm run sync-spec`。（源：`02-TYPE-SYSTEM.md`）
 :::
 
 ﻿---
@@ -27,7 +27,7 @@ title: "类型系统"
 | 静实例隔离 | 静态与实例使用 **独立** 元数据与三表 |
 | 仅 public | JS 仅可访问 `public` 成员 |
 | Bind 期扁平继承 | 静/实例成员均在 **EnsureBinding** 写入当前类型三表；**无**运行时沿继承链查找 |
-| 属性 miss | 读/写未注册成员 → **`throw Error('zts: …')`**（见 [metatable/02-INDEX.md](./metatable/02-INDEX.md)） |
+| 属性 miss | 读/写未注册成员 → **`throw Error('zents: …')`**（见 [metatable/02-INDEX.md](./metatable/02-INDEX.md)） |
 | 方法 this | `obj.Method(args)` 作为 **方法调用** 时自动传入 CLR `this`；提取函数 **不** 自动绑定 |
 
 ---
@@ -102,27 +102,27 @@ CSharp.AC['MyGame.UI.Outer+Inner']
 
 ### 2.4 类型实参（typeArg）
 
-用于 `zts.make_generic_type`、`make_szarray_type` 等（见 `05-LIB.md`）。
+用于 `zents.make_generic_type`、`make_szarray_type` 等（见 `05-LIB.md`）。
 
 | 形式 | 说明 |
 |------|------|
 | `CSharp[assembly][typeFullName]` 或 `csharp:` named export | 类型对象（二者 identity 相同，§2.11） |
-| `zts.make_generic_type` / `make_szarray_type` / `make_mdarray_type` 返回值 | intern 类型对象 |
+| `zents.make_generic_type` / `make_szarray_type` / `make_mdarray_type` 返回值 | intern 类型对象 |
 | mscorlib **字符串** | 如 `"System.Int32"`；**仅** corlib |
-| `zts.types.*` | mscorlib 全名常量 |
+| `zents.types.*` | mscorlib 全名常量 |
 
-**禁止：** 任意普通 JS object、非 ZTS exotic object、`zts.typeof(...)` 返回值作为 `make_*_type` 的 typeArg（`typeof` 供签名等，见 §2.7）。
+**禁止：** 任意普通 JS object、非 ZenTS exotic object、`zents.typeof(...)` 返回值作为 `make_*_type` 的 typeArg（`typeof` 供签名等，见 §2.7）。
 
 ### 2.5 泛型类型
 
 ```javascript
 const ListDef = CSharp.mscorlib['System.Collections.Generic.List`1'];
-const List_int = zts.make_generic_type(ListDef, zts.types.int32);
+const List_int = zents.make_generic_type(ListDef, zents.types.int32);
 
-const Dict_str_int = zts.make_generic_type(
+const Dict_str_int = zents.make_generic_type(
     CSharp.mscorlib['System.Collections.Generic.Dictionary`2'],
-    zts.types.string,
-    zts.types.int32
+    zents.types.string,
+    zents.types.int32
 );
 ```
 
@@ -132,27 +132,27 @@ const Dict_str_int = zts.make_generic_type(
 ### 2.6 数组类型
 
 ```javascript
-const int_arr = zts.make_szarray_type(zts.types.int32);      // int[]
-const md_type = zts.make_mdarray_type(zts.types.int32, 2);   // int[,]
+const int_arr = zents.make_szarray_type(zents.types.int32);      // int[]
+const md_type = zents.make_mdarray_type(zents.types.int32, 2);   // int[,]
 ```
 
 `rank ≥ 1`；szarray 与 mdarray 为不同类型。
 
-### 2.7 `zts.typeof`
+### 2.7 `zents.typeof`
 
 ```javascript
 // 等价于 C# typeof(Demo) / typeof(List<int>)
-const t = zts.typeof(CSharp.AC.Demo);
-const ListInt = zts.make_generic_type(
+const t = zents.typeof(CSharp.AC.Demo);
+const ListInt = zents.make_generic_type(
     CSharp.mscorlib['System.Collections.Generic.List`1'],
-    zts.types.int32
+    zents.types.int32
 );
-const t2 = zts.typeof(ListInt);   // 闭合泛型 / 数组等任意类型对象均可
+const t2 = zents.typeof(ListInt);   // 闭合泛型 / 数组等任意类型对象均可
 ```
 
-`typeObject` 为 **任意** ZTS 类型对象。**返回值** 为该类型的 **`System.Type` 反射对象**（class exotic object），语义对应 C# `typeof(T)`。可供需要 `System.Type` 的 API / 签名场景使用；**不**作为 §2.4 typeArg。
+`typeObject` 为 **任意** ZenTS 类型对象。**返回值** 为该类型的 **`System.Type` 反射对象**（class exotic object），语义对应 C# `typeof(T)`。可供需要 `System.Type` 的 API / 签名场景使用；**不**作为 §2.4 typeArg。
 
-### 2.8 `zts.types` / `zts.get_type_from_name`
+### 2.8 `zents.types` / `zents.get_type_from_name`
 
 见 `05-LIB.md` §4.2、§4.3。`get_type_from_name(typeFullName)` 对标 `System.Type.GetType(string)`，返回类型对象（支持 AQN、泛型、数组）。
 
@@ -162,10 +162,10 @@ const t2 = zts.typeof(ListInt);   // 闭合泛型 / 数组等任意类型对象�
 |------|------|------|
 | `CSharp[assembly][typeFullName]` | class、struct、enum、delegate、interface、嵌套、**未闭合泛型定义** | `CSharp.AC['Outer+Inner']` |
 | **`import { T } from "csharp:…"`** | 同上（按程序集 + 命名空间 / 声明类型）；见 §2.11 | `import { Panel } from "csharp:Assembly-CSharp/MyGame.UI"` |
-| `zts.get_type_from_name` | 单字符串解析（AQN / 泛型 / 数组） | `zts.get_type_from_name("System.Int32[]")` |
-| `zts.make_generic_type` | **闭合泛型** | `List<int>` |
-| `zts.make_szarray_type` | `T[]` | |
-| `zts.make_mdarray_type` | `T[,…]` | |
+| `zents.get_type_from_name` | 单字符串解析（AQN / 泛型 / 数组） | `zents.get_type_from_name("System.Int32[]")` |
+| `zents.make_generic_type` | **闭合泛型** | `List<int>` |
+| `zents.make_szarray_type` | `T[]` | |
+| `zents.make_mdarray_type` | `T[,…]` | |
 
 **不**经 `CSharp[...]` 或 `csharp:` 模块直接解析：闭合泛型、数组类型（须 `make_*` 或 `get_type_from_name`）。
 
@@ -179,8 +179,8 @@ assembly[typeFullName] 属性 miss → 解析 Type → EnsureBinding → 缓存
 
 | miss | 行为 |
 |------|------|
-| 程序集不存在 | **`throw Error('zts: assembly not found: {assemblyName}')`** |
-| 类型不存在 | **`throw Error('zts: type not found: {typeFullName}')`** |
+| 程序集不存在 | **`throw Error('zents: assembly not found: {assemblyName}')`** |
+| 类型不存在 | **`throw Error('zents: type not found: {typeFullName}')`** |
 
 **禁止**对不存在的程序集 / 类型返回 `undefined`。
 
@@ -188,7 +188,7 @@ assembly[typeFullName] 属性 miss → 解析 Type → EnsureBinding → 缓存
 
 ### 2.10 类型对象元数据（解析用）
 
-下列为 **脚本可读** 或 **调试可见** 的约定字段（实现可通过 `Symbol` 或不可枚举属性暴露；键名以 `TsConsts` 为准）：
+下列为 **脚本可读** 或 **调试可见** 的约定字段（实现可通过 `Symbol` 或不可枚举属性暴露；键名以 `JsConsts` 为准）：
 
 | 字段 | 说明 |
 |------|------|
@@ -241,7 +241,7 @@ ns-or-decl       := CLR 命名空间（可含 `.`）
 |------|------|
 | 前缀 | **必须** 为 `csharp:`（保留 scheme）。**禁止** 裸 `"Assembly-CSharp"` 以免与业务 `moduleLoader` specifier 冲突 |
 | 第一个 `/` | 分隔 **程序集** 与 **路径**；程序集名不得含 `/` |
-| 第二个及以后 `/` | **非法** → `throw Error('zts: invalid csharp module specifier: …')`（命名空间用 `.`，不用再切路径段） |
+| 第二个及以后 `/` | **非法** → `throw Error('zents: invalid csharp module specifier: …')`（命名空间用 `.`，不用再切路径段） |
 | 无 `/` 或 `/` 后为空 | 该程序集 **全局命名空间**（`Type.Namespace` 为空） |
 | 绝对 specifier | `csharp:` 开头 **原样** 作为模块名；`module_normalize` **不得** 按相对路径改写 |
 | 大小写 | 与 `CSharp` 根对象相同（CLR 简单名 / 命名空间） |
@@ -262,7 +262,7 @@ ns-or-decl       := CLR 命名空间（可含 `.`）
 
 - 导出该声明类型的 **直接** public 嵌套类型（一层；更深嵌套再以其 `typeFullName` 打开模块）。
 
-同一模块内导出名冲突（编码后相同）→ 模块实例化失败：`throw Error('zts: csharp export name conflict: {name} in {specifier}')`。
+同一模块内导出名冲突（编码后相同）→ 模块实例化失败：`throw Error('zents: csharp export name conflict: {name} in {specifier}')`。
 
 #### 2.11.3 命名空间 vs 嵌套类型
 
@@ -299,12 +299,12 @@ import { Deep } from "csharp:Assembly-CSharp/Foo.Bar+Inner+"; // 更深一层
 ```javascript
 import { List, List$1 } from "csharp:mscorlib/System.Collections.Generic";
 console.assert(List === List$1);
-const ListInt = zts.make_generic_type(List, zts.types.int32);
+const ListInt = zents.make_generic_type(List, zents.types.int32);
 ```
 
 同命名空间同时存在 `Foo` 与 `` Foo`1 `` → **不**导出无 arity 的糖名；`` Foo`1 `` 仅 `Foo$1`。`Foo` 仍指向非泛型类型。
 
-开放泛型的 **构造** 仍走 `zts.make_generic_type`（§2.5）；`csharp:` 只提供类型定义对象。
+开放泛型的 **构造** 仍走 `zents.make_generic_type`（§2.5）；`csharp:` 只提供类型定义对象。
 
 #### 2.11.5 Identity、惰性与 miss
 
@@ -317,13 +317,13 @@ const ListInt = zts.make_generic_type(List, zts.types.int32);
 | `csharp:` 未导出的静态 import | 遵循 **普通 ES 模块** 链接失败（名字不在 export 列表） |
 | `import * as ns; ns.Missing` | 标准模块命名空间 → **`undefined`**（**不是** `CSharp` 的 miss throw） |
 
-程序集不存在 → **`throw Error('zts: assembly not found: {assemblyName}')`**（与 `CSharp` 相同），**不得** 交给宿主 `moduleLoader`。
+程序集不存在 → **`throw Error('zents: assembly not found: {assemblyName}')`**（与 `CSharp` 相同），**不得** 交给宿主 `moduleLoader`。
 
-声明类型模块的 `typeFullName` 不存在 → **`throw Error('zts: type not found: {typeFullName}')`**。
+声明类型模块的 `typeFullName` 不存在 → **`throw Error('zents: type not found: {typeFullName}')`**。
 
 #### 2.11.6 Loader 与 `GetFunction`
 
-`csharp:` 由 ZTS 运行时 **在宿主 `moduleLoader` 之前** 拦截并合成模块，**不得** 把 `csharp:` specifier 传给业务 loader。与第三方原生 C 模块的优先级见 [build/05-NATIVE-MODULES.md](./build/05-NATIVE-MODULES.md)：`csharp:` 为 ZTS 保留，**禁止** 第三方以同一前缀注册。
+`csharp:` 由 ZenTS 运行时 **在宿主 `moduleLoader` 之前** 拦截并合成模块，**不得** 把 `csharp:` specifier 传给业务 loader。与第三方原生 C 模块的优先级见 [build/05-NATIVE-MODULES.md](./build/05-NATIVE-MODULES.md)：`csharp:` 为 ZenTS 保留，**禁止** 第三方以同一前缀注册。
 
 `csharp:` 模块的 named export 是 **类型对象**，一般 **不是** 业务 callable。`GetFunction<T>(jsModule, jsExportName)` **不应** 以 `csharp:` specifier 作为脚本入口；若误用，按现有规则因「非 callable」抛 C# 异常。
 
@@ -335,7 +335,7 @@ const ListInt = zts.make_generic_type(List, zts.types.int32);
 |----|------|
 | 整程序集短名摊平 | **不** 把 `foo.MyClass` 与 `bar.MyClass` 都导出为 `csharp:asm` 上的 `MyClass`（短名只在同一命名空间 / 同一声明类型内唯一） |
 | 命名空间对象链 | **不** 提供官方 `CS.MyGame.UI.Panel`；迁移见 [12-MIGRATION-ADAPTORS.md](./12-MIGRATION-ADAPTORS.md) |
-| 闭合泛型 / 数组 export | 继续 `zts.make_*` / `get_type_from_name` |
+| 闭合泛型 / 数组 export | 继续 `zents.make_*` / `get_type_from_name` |
 | CommonJS `require` | v1 范围外 |
 | 运行时依赖 `.d.ts` | QuickJS **不**加载声明文件。生成契约、入库与 `tsc` 见 [14-TYPESCRIPT.md](./14-TYPESCRIPT.md) |
 
@@ -380,7 +380,7 @@ instance exotic object
   [[Payload]]       = 对象指针或 struct 拷贝
 ```
 
-同一托管对象可有多个 exotic object（不同 view）；`zts.cast` 切换门面（`spec/marshal/06-CLASS.md`）。
+同一托管对象可有多个 exotic object（不同 view）；`zents.cast` 切换门面（`spec/marshal/06-CLASS.md`）。
 
 **禁止**经实例属性分派 **隐式**访问静态成员；须使用类型对象 `T` 访问静态成员（见 §3.3）。
 
@@ -399,7 +399,7 @@ instance exotic object
 
 - 字段、无参/有参 property、方法、构造函数
 - **继承链 public 成员扁平写入** 当前类型三表（§5）
-- `[TsAlias]` 换名后的最终名（可与其它方法默认名/别名重复，见 overload §5）
+- `[JsAlias]` 换名后的最终名（可与其它方法默认名/别名重复，见 overload §5）
 
 ### 3.5 枚举
 
@@ -408,12 +408,12 @@ instance exotic object
 - Bind 期：**public static literal** → 类型对象自有属性，值为 **number**（underlying 整型）
 - **无** `[[Construct]]` / `_default` / `_ctor`
 - 默认跨边界：**number**（`spec/marshal/08-ENUM.md`）；**禁止** bigint
-- boxed 实例：**仅** `zts.box(E, value)` → ByObj
+- boxed 实例：**仅** `zents.box(E, value)` → ByObj
 
 ```javascript
 const Color = CSharp.AC['MyGame.Color'];
 console.assert(Color.Red === 0);
-const redBox = zts.box(Color, Color.Red);
+const redBox = zents.box(Color, Color.Red);
 ```
 
 ### 3.6 Nullable\<T\>
@@ -425,9 +425,9 @@ const redBox = zts.box(Color, Color.Red);
 - `null` → JS **`null`**（**不是** `undefined`；见 [00-OVERVIEW.md](./00-OVERVIEW.md) §1.4）
 
 ```javascript
-const NullableInt = zts.make_generic_type(
+const NullableInt = zents.make_generic_type(
     CSharp.mscorlib['System.Nullable`1'],
-    zts.types.int32
+    zents.types.int32
 );
 CS.Service.Take(NullableInt(42));   // 有值：number
 CS.Service.Take(null);              // null
@@ -480,7 +480,7 @@ const p = new Point(3, 4);
 
 ### 4.4 方法
 
-见 `04-METHOD-OVERLOAD.md`：单重 → direct function；多重 → dispatch；`[TsAlias]` / `register_method`。
+见 `04-METHOD-OVERLOAD.md`：单重 → direct function；多重 → dispatch；`[JsAlias]` / `register_method`。
 
 **调用约定：**
 
@@ -510,7 +510,7 @@ demo.remove_ValueChanged(handler);
 | 类型 | 构造入口 |
 |------|----------|
 | class / struct | `new Type(...)` → `[[Construct]]`；struct 另有 `Type._default()` |
-| enum | **无**；`zts.box` |
+| enum | **无**；`zents.box` |
 | Nullable\<T\> | `N(...)` 或 `new N(...)` → element `T` 的值；null 用 `null` |
 | 抽象类 / 接口 | 无 public 构造则 construct throw |
 
@@ -538,7 +538,7 @@ demo.remove_ValueChanged(handler);
 ```
 1. 查 methodTable / fieldGetterTable / fieldSetterTable（及 STO 回退）
 2. 命中 → 返回或调用
-3. 未命中 → throw Error('zts: …')（见 metatable/02-INDEX.md）
+3. 未命中 → throw Error('zents: …')（见 metatable/02-INDEX.md）
 ```
 
 **无** 步骤「沿继承链查找」或「提升到 instanceMap」。
@@ -547,7 +547,7 @@ demo.remove_ValueChanged(handler);
 
 ### 5.3 方法与 dispatch 的继承
 
-若继承树上同一 `is_static` 域存在多个 public **最终同名**候选（含基类扁平化结果、`[TsAlias]` 撞名），Bind 后该键绑定 **dispatch function**。分派时候选列表含该最终名下全部 applicable 重载；选优规则见 `04-METHOD-OVERLOAD.md` §3.6、§5。
+若继承树上同一 `is_static` 域存在多个 public **最终同名**候选（含基类扁平化结果、`[JsAlias]` 撞名），Bind 后该键绑定 **dispatch function**。分派时候选列表含该最终名下全部 applicable 重载；选优规则见 `04-METHOD-OVERLOAD.md` §3.6、§5。
 
 ---
 
@@ -559,7 +559,7 @@ demo.remove_ValueChanged(handler);
 
 ```javascript
 // Type.Foo 为 direct generic method function
-const foo_int = zts.make_generic_method(Type.Foo, zts.types.int32);
+const foo_int = zents.make_generic_method(Type.Foo, zents.types.int32);
 foo_int(obj, value);   // 静态则无需 obj
 ```
 
@@ -576,9 +576,9 @@ foo_int(obj, value);   // 静态则无需 obj
 ### 7.1 创建
 
 ```javascript
-const arr = zts.new_szarray_by_element_type(zts.types.int32, 10);
-const arr2 = zts.new_szarray_by_szarray_type(int_arr_type, 10);
-const matrix = zts.new_mdarray_by_spec(zts.types.int32, [0,0], [2,3]);
+const arr = zents.new_szarray_by_element_type(zents.types.int32, 10);
+const arr2 = zents.new_szarray_by_szarray_type(int_arr_type, 10);
+const matrix = zents.new_mdarray_by_spec(zents.types.int32, [0,0], [2,3]);
 ```
 
 ### 7.2 `length`
@@ -607,14 +607,14 @@ const x = matrix.get(0, 1);
 | `get` | 实参个数 = `rank`；返回元素类型的 JS 形态（基元未装箱） |
 | `set` | 前 `rank` 个为 **C# 下标**（含 lowerBound），最后一参为 value |
 
-与 `zts.to_array` 的 **0 基** JS Array 不同（`05-LIB.md` §8.4）。
+与 `zents.to_array` 的 **0 基** JS Array 不同（`05-LIB.md` §8.4）。
 
 ### 7.4 互转
 
 | API | 说明 |
 |-----|------|
-| `zts.to_bytes` | blittable 元素 szarray → 按内存字节拷贝为 `Uint8Array` / binary string（实现二选一，须文档化） |
-| `zts.to_array` | szarray → JS `Array`（0..n-1 连续索引） |
+| `zents.to_bytes` | blittable 元素 szarray → 按内存字节拷贝为 `Uint8Array` / binary string（实现二选一，须文档化） |
+| `zents.to_array` | szarray → JS `Array`（0..n-1 连续索引） |
 
 ---
 
@@ -646,7 +646,7 @@ const x = matrix.get(0, 1);
 | 构造、dispatch、泛型方法 | 一致 |
 | 数组 `length`、`get`/`set` | 一致 |
 | 方法 this 绑定规则 | 一致 |
-| 错误消息 | 一致或等价（`zts:` 前缀） |
+| 错误消息 | 一致或等价（`zents:` 前缀） |
 
 ---
 
@@ -664,12 +664,12 @@ const panel = new Panel();
 const p = new Point2D(3, 4);
 const zero = Point2D._default();
 
-const ListInt = zts.make_generic_type(List, zts.types.int32);
+const ListInt = zents.make_generic_type(List, zents.types.int32);
 const list = new ListInt();
 
 demo.add_Changed(() => {});
 
-const arr = zts.new_szarray_by_element_type(zts.types.int32, 4);
+const arr = zents.new_szarray_by_element_type(zents.types.int32, 4);
 arr.set(0, 42);
 ```
 
@@ -689,7 +689,7 @@ const Inner = CSharp.AC['MyGame.UI.Outer+Inner'];
 
 | 主题 | Il2Cpp | Mono |
 |------|--------|------|
-| 类型懒加载 | `TypeRegistry` | `TsMonoAppDomain` / MetaBinding |
+| 类型懒加载 | `TypeRegistry` | `JsMonoAppDomain` / MetaBinding |
 | `csharp:` 虚拟模块 | `JsLoader` 拦截 + `JS_NewCModule`（或等价） | 同等：`JS_SetModuleLoaderFunc` 链，**先于** 宿主 `moduleLoader` |
 | 三表 indexer | `MetaBinding` / `Dispatch*` | exotic internal slots + JS 回调 |
 | 继承扁平 | `MetaBinding::EnsureBinding` | `MetaBinding.cs` |

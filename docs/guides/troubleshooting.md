@@ -1,14 +1,14 @@
 ---
 sidebar_position: 24
 title: 排障
-description: ZTS 常见问题诊断与解决方案（附录）。
+description: ZenTS 常见问题诊断与解决方案（附录）。
 ---
 
 # 排障
 
-附录。开发期可在 **Editor（Mono）** 快速迭代；Player 问题先确认 **`ZTS/Generate/All`** 与 [兼容性](/docs/getting-started/compatibility/)。主线学习请从 [安装](/docs/guides/install/) 起。
+附录。开发期可在 **Editor（Mono）** 快速迭代；Player 问题先确认 **`ZenTS/Generate/All`** 与 [兼容性](/docs/getting-started/compatibility/)。主线学习请从 [安装](/docs/guides/install/) 起。
 
-Canonical 工程：[zts-demo](https://github.com/focus-creative-games/zts-demo)（`js-demo` / `ts-demo`）。
+Canonical 工程：[zen-ts-demo](https://github.com/focus-creative-games/zen-ts-demo)（`js-demo` / `ts-demo`）。
 
 ---
 
@@ -18,7 +18,7 @@ Canonical 工程：[zts-demo](https://github.com/focus-creative-games/zts-demo)�
 
 | 检查项 | 说明 |
 |--------|------|
-| `TsAppDomain.Initialize` | 须 `[RuntimeInitializeOnLoadMethod(BeforeSceneLoad)]` 或更早 |
+| `JsAppDomain.Initialize` | 须 `[RuntimeInitializeOnLoadMethod(BeforeSceneLoad)]` 或更早 |
 | loader 返回值 | `LoadJsModule("app")` 是否非 null；路径是否指向 `JsScripts` / `out/` |
 | Console 过滤器 | 确认未隐藏 `Log` |
 
@@ -27,7 +27,7 @@ Canonical 工程：[zts-demo](https://github.com/focus-creative-games/zts-demo)�
 | 检查项 | Editor | Player |
 |--------|--------|--------|
 | 纯 JS 路径 | `{ProjectRoot}/JsScripts/xxx.js` | `StreamingAssets/Js/xxx.js`（或约定路径） |
-| TS 路径 | `TsProject/out/xxx.js` | `StreamingAssets/ZTS/xxx.js` |
+| TS 路径 | `TsProject/out/xxx.js` | `StreamingAssets/ZenTS/xxx.js` |
 | canonical | **不含** `.js`；`GetFunction("app", …)` 不是 `"app.js"` |
 | Sync / emit | 可选 | **必须** Sync 或拷贝 emit |
 
@@ -37,12 +37,12 @@ Canonical 工程：[zts-demo](https://github.com/focus-creative-games/zts-demo)�
 
 ### 程序集 / 类型找不到
 
-- 错误形如 `zts: assembly not found` / `type not found`（或等价 `Error`）
+- 错误形如 `zents: assembly not found` / `type not found`（或等价 `Error`）
 - 检查程序集名 / 别名：`CSharp['AC'] = CSharp['Assembly-CSharp']`
 - 含 namespace须 `CSharp.AC['Ns.Type']` 或 `import { T } from "csharp:Assembly-CSharp/Ns"`
 - TS：是否已 **Generate Typings**；声明集是否与 Generate 同源
 
-### `Error('zts: … member not found')`（strict miss）
+### `Error('zents: … member not found')`（strict miss）
 
 - 拼写、是否 `public`、是否在实例上误访静态（或反之）
 - **不要**期望未知成员返回 `undefined`
@@ -68,7 +68,7 @@ fn(1);               // ❌ 提取函数不绑定 this
 
 ### `GetFunction` 无效
 
-- 是否已 `TsAppDomain.Initialize`
+- 是否已 `JsAppDomain.Initialize`
 - module / export 是否与 **named export** 一致（非 `export default`）
 - `T` 委托签名是否匹配
 - 是否刚 `Reset`：旧委托已作废，须重新 `GetFunction`
@@ -76,7 +76,7 @@ fn(1);               // ❌ 提取函数不绑定 this
 
 ### 再次 `Initialize` 抛异常
 
-已有主 `JSContext` 时须 `TsAppDomain.Reset(loader)`，**不能**再次 `Initialize`「只换 loader」。见 [宿主 API](/docs/spec/01-HOST-API/)。
+已有主 `JSContext` 时须 `JsAppDomain.Reset(loader)`，**不能**再次 `Initialize`「只换 loader」。见 [宿主 API](/docs/spec/01-HOST-API/)。
 
 ---
 
@@ -103,7 +103,7 @@ fn(1);               // ❌ 提取函数不绑定 this
 
 | 检查 | 说明 |
 |------|------|
-| Install | 本地 Il2Cpp / QuickJS / zts 树是否存在 |
+| Install | 本地 Il2Cpp / QuickJS / zents 树是否存在 |
 | Generate | Il2Cpp 必须 Generate C++ stub |
 | StreamingAssets | JS / TS emit 是否 Sync |
 | 废弃 API | 勿用 Event `.get`；方法用点号而非冒号 |
@@ -117,7 +117,7 @@ fn(1);               // ❌ 提取函数不绑定 this
 | 现象 | 处理 |
 |------|------|
 | Package 解析失败 | `manifest.json` 的 `file:` / git URL；开发期改路径后刷新 Package Manager |
-| 换包后 TS types 失效 | 检查 `tsconfig` 对包内 `ZTS~/types` 的引用 |
+| 换包后 TS types 失效 | 检查 `tsconfig` 对包内 `ZenTS~/types` 的引用 |
 
 ---
 
